@@ -1,0 +1,13 @@
+
+MNIST (14 x 14)
+
+* example_mnist_dae.m - denoising autoencoder with a single hidden layer
+* example_mnist_sdae.m - deep autoencoder for visualization
+* example_mnist_dbn.m - deep belief network (up-down algorithm)
+* example_mnist_dbm.m - deep boltzmann machine (two-stage pretraining)
+
+Image Patches (8 x 8)
+
+* example_patches_dae.m - denoising autoencoder with a single hidden layer
+* example_patches_dbm.m - deep boltzmann machine (two-stage pretraining)
+

@@ -1,0 +1,53 @@
+
+
+To-do:
+
+ - rbm_pt.m, grbm_pt.m: merge
+ - rbm_pt.m: use CUDA (matlab parallel computing toolbox)
+ - rbm.m, rbm_pt.m: merge
+ - dbm.m: support parallel tempering or cast
+ - Progress display for DBM, DAE
+
+Done:
+
+ - rbm.m, grbm.m: merge => rbm.m only, grbm.m obsolete now
+ - rbm.m: use CUDA (matlab parallel computing toolbox)
+ - dbm.m: use CUDA (matlab parallel computing toolbox)
+ - dbm.m: adaptive learning rate
+ - dae.m, dae_get_hidden.m, default_dae.m: a single-layer DAE
+ - dae.m: contractive, soft-sparsity regularizations
+ - sdae.m: deep autoencoder (tied weights)
+ - dae_get_hidden.m: explicit sparsification
+ - sdae_get_hidden.m: explicit sparsification
+ - dbn.m: up-down learning algorithm for deep belief net
+ - mlp.m default_mlp.m classify_mlp.m: MLP (stochastic backpropagation, no fancy thing)
+ - rbm.m: Fast PCD
+ - dbm.m: centering trick (fixed centering variables only)
+
+Implemented Features:
+
+ - GPU Computing: Matlab Parallel Computing Toolbox
+
+ - (Denoising) Autoencoder
+    + Shallow one: sparsity, contractive regularization
+    + Deep one: stochastic backprop
+    + Binary/Gaussian visible and hidden units
+    + Soft-sparsity regularization (Gaussian-Gaussian case)
+
+ - Multi-layer Perceptron
+    + Stochastic Backpropagation, Adagrad
+    + tanh/sigm nonlinearities
+
+ - Restricted Boltzmann Machines & Deep Belief Networks
+    + Binary, Gaussian
+    + Enhanced Grad., Adaptive Learning Rate
+    + Contrastive Divergence, (Fast) Persistent Contrastive Divergence
+    + Parallel Tempering
+    + Deep belief networks: up-down learning algorithm
+
+ - Deep Boltzmann Machines
+    + Binary, Gaussian
+    + Enhanced Grad., Adaptive Learning Rate
+    + Contrastive Divergence, Persistent Contrastive Divergence
+
+
