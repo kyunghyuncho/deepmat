@@ -493,6 +493,16 @@ for step=1:n_epochs
                     h0_next = dbm_get_hidden(v0_next, D, 10, 1e-6, D.mf.reg);
                     h0_next{1} = v0_next;
                 end
+
+                if D.centering.use
+                    for l = 1:n_layers
+                        if D.data.binary == 0 && l == 1
+                            continue;
+                        end
+                        h0_next{l} = bsxfun(@minus, h0_next{l}, D.centering.centers{l}');
+                    end
+                end
+                
                 [cE, cEmin, cEmax, cEs] = dbm_energy(h1, D.W, D.biases, D.data.binary, 1., D.sigmas, base_sigma, base_vbias);
 
                 base_lrate = actual_lrate;
@@ -520,6 +530,8 @@ for step=1:n_epochs
                             logsigmas_test = logsigmas + cand_lrate * (((1-momentum) * sigma_grad + momentum * sigma_grad_old)' - weight_decay * logsigmas);
                             logsigmas_test = max(epsilon_logsigma, min(logsigmas_ub, logsigmas_test));
                             sigmas_test = sqrt(exp(logsigmas));
+                        else
+                            sigmas_test = logsigmas_test;
                         end
                     else
                         sigmas_test = logsigmas_test;
