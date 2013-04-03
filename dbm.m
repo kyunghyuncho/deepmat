@@ -544,7 +544,7 @@ for step=1:n_epochs
                     [dE, dEmin, dEmax, dEs] = dbm_energy(h0_next, W_test, biases_test, D.data.binary, 1., sigmas_test, base_sigma, base_vbias);
                     [fE, fEmin, fEmax, fEs] = dbm_energy(h1, W_test, biases_test, D.data.binary, 1., sigmas_test, base_sigma, base_vbias);
 
-                    now_cost = sum(-double(gather(dEs)) - logsum(-double(gather(fEs + cEs))) + log(size(h1{1},1)));
+                    now_cost = sum(-double(gather(dEs)) - logsum(double(gather(-fEs + cEs))) + log(size(h1{1},1)));
 
                     costs(s) = now_cost;
 
