@@ -531,10 +531,10 @@ for step=1:n_epochs
                             logsigmas_test = max(epsilon_logsigma, min(logsigmas_ub, logsigmas_test));
                             sigmas_test = sqrt(exp(logsigmas));
                         else
-                            sigmas_test = logsigmas_test;
+                            sigmas_test = sqrt(exp(logsigmas_test));
                         end
                     else
-                        sigmas_test = logsigmas_test;
+                        sigmas_test = sqrt(exp(logsigmas_test));
                     end
 
 %                    % FIXME: Should we?
