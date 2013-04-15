@@ -62,7 +62,7 @@ else
 
     Es = zeros(n_samples,1);
 
-    Es = Es + sum(((vs{1}./tsigmas) * Ws{1}) .* tvs{2},2) - sum(((vs{1} - tvbias).^2) ./ tsigmas, 2);
+    Es = Es + sum(((vs{1}./tsigmas) * Ws{1}) .* tvs{2},2) - sum(((vs{1} - tvbias).^2) ./ (2 * tsigmas), 2);
 
     for l=2:(length(vs)-1)
         Es = Es + sum((tvs{l} * Ws{l}) .* tvs{l+1},2) + tvs{l} * biases{l};
