@@ -60,8 +60,12 @@ if do_pretrain
         D.noise.drop = 0.2;
         D.noise.level = 0;
 
-        D.adagrad.use = 1;
-        D.adagrad.epsilon = 1e-8;
+        %D.adagrad.use = 1;
+        %D.adagrad.epsilon = 1e-8;
+        D.adagrad.use = 0;
+        D.adadelta.use = 1;
+        D.adadelta.epsilon = 1e-8;
+        D.adadelta.momentum = 0.99;
 
         D.iteration.n_epochs = 500;
 
@@ -102,9 +106,12 @@ S.learning.minibatch_sz = 128;
 
 %S.noise.drop = 0.2;
 %S.noise.level = 0;
+S.adadelta.use = 1;
+S.adadelta.epsilon = 1e-8;
+S.adadelta.momentum = 0.99;
 
-S.adagrad.use = 1;
-S.adagrad.epsilon = 1e-8;
+%S.adagrad.use = 1;
+%S.adagrad.epsilon = 1e-8;
 S.valid_min_epochs = 10;
 
 S.iteration.n_epochs = 100;
@@ -113,6 +120,13 @@ if do_pretrain
     for l = 1:n_layers-1
         S.biases{l+1} = Ds{l}.hbias;
         S.W{l} = Ds{l}.W;
+    end
+else
+    if S.data.binary
+        mH = mean(X, 1)';
+        S.biases{1} = min(max(log(mH./(1 - mH)), -4), 4);
+    else
+        S.biases{1} = mean(X, 1)';
     end
 end
 

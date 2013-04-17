@@ -60,8 +60,11 @@ if do_pretrain
         D.noise.drop = 0.2;
         D.noise.level = 0;
 
-        D.adagrad.use = 1;
-        D.adagrad.epsilon = 1e-8;
+        %D.adagrad.use = 1;
+        %D.adagrad.epsilon = 1e-8;
+        D.adadelta.use = 1;
+        D.adadelta.epsilon = 1e-8;
+        D.adadelta.momentum = 0.99;
 
         D.valid_min_epochs = 10;
 
@@ -110,8 +113,11 @@ M.learning.lrate0 = 5000;
 M.learning.weight_decay = 0.0001;
 M.learning.minibatch_sz = 128;
 
-M.adagrad.use = 1;
-M.adagrad.epsilon = 1e-8;
+%M.adagrad.use = 1;
+%M.adagrad.epsilon = 1e-8;
+M.adadelta.use = 1;
+M.adadelta.epsilon = 1e-8;
+M.adadelta.momentum = 0.99;
 
 M.noise.drop = 0;
 M.noise.level = 0;

@@ -85,6 +85,22 @@ function [M] = default_mlp (layers)
         end
     end
 
+    M.adadelta.use = 0;
+    M.adadelta.momentum = 0.99;
+    M.adadelta.epsilon = 1e-6;
+    M.adadelta.gW = cell(n_layers, 1);
+    M.adadelta.gbiases = cell(n_layers, 1);
+    M.adadelta.W = cell(n_layers, 1);
+    M.adadelta.biases = cell(n_layers, 1);
+    for l = 1:n_layers
+        M.adadelta.gbiases{l} = zeros(layers(l), 1);
+        M.adadelta.biases{l} = zeros(layers(l), 1);
+        if l < n_layers
+            M.adadelta.gW{l} = zeros(layers(l), layers(l+1));
+            M.adadelta.W{l} = zeros(layers(l), layers(l+1));
+        end
+    end
+
     % iteration
     M.iteration.n_epochs = 100;
     M.iteration.n_updates = 0;

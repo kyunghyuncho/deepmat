@@ -80,6 +80,22 @@ function [S] = default_sdae (layers)
         end
     end
 
+    S.adadelta.use = 0;
+    S.adadelta.momentum = 0.99;
+    S.adadelta.epsilon = 1e-6;
+    S.adadelta.gW = cell(n_layers, 1);
+    S.adadelta.gbiases = cell(n_layers, 1);
+    S.adadelta.W = cell(n_layers, 1);
+    S.adadelta.biases = cell(n_layers, 1);
+    for l = 1:n_layers
+        S.adadelta.gbiases{l} = zeros(layers(l), 1);
+        S.adadelta.biases{l} = zeros(layers(l), 1);
+        if l < n_layers
+            S.adadelta.gW{l} = zeros(layers(l), layers(l+1));
+            S.adadelta.W{l} = zeros(layers(l), layers(l+1));
+        end
+    end
+
     % iteration
     S.iteration.n_epochs = 100;
     S.iteration.n_updates = 0;

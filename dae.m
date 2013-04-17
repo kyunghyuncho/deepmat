@@ -98,6 +98,14 @@ for step=1:n_epochs
             D.adagrad.W = gpuArray(single(D.adagrad.W));
             D.adagrad.vbias = gpuArray(single(D.adagrad.vbias));
             D.adagrad.hbias = gpuArray(single(D.adagrad.hbias));
+        elseif D.adadelta.use
+            D.adadelta.gW = gpuArray(single(D.adadelta.gW));
+            D.adadelta.gvbias = gpuArray(single(D.adadelta.gvbias));
+            D.adadelta.ghbias = gpuArray(single(D.adadelta.ghbias));
+
+            D.adadelta.W = gpuArray(single(D.adadelta.W));
+            D.adadelta.vbias = gpuArray(single(D.adadelta.vbias));
+            D.adadelta.hbias = gpuArray(single(D.adadelta.hbias));
         end
     end
 
@@ -146,7 +154,11 @@ for step=1:n_epochs
             vr = sigmoid(vr, D.visible.use_tanh);
         end
 
-        rerr = mean(sum((v0_clean - vr).^2,2));
+        if D.data.binary
+            rerr = -mean(sum(v0_clean .* log(max(vr, 1e-16)) + (1 - v0_clean) .* log(max(1 - vr, 1e-16)), 2));
+        else
+            rerr = mean(sum((v0_clean - vr).^2,2));
+        end
         if use_gpu > 0
             rerr = gather(rerr);
         end
@@ -159,6 +171,8 @@ for step=1:n_epochs
         end
         vbias_grad = mean(deltao, 1);
 
+        clear hr vr;
+
         deltah = deltao * D.W;
         if D.hidden.binary
             deltah = deltah .* dsigmoid(h0, D.hidden.use_tanh);
@@ -167,11 +181,14 @@ for step=1:n_epochs
 
         W_grad = ((deltao' * h0) + (v0' * deltah)) / size(v0,1);
 
+        clear deltao deltah;
+
         if D.sparsity.cost > 0 && D.hidden.use_tanh == 0
             diff_sp = (h0 - D.sparsity.target);
             hbias_grad = hbias_grad + D.sparsity.cost * mean(diff_sp, 1);
             %W_grad = W_grad + (D.sparsity.cost/size(v0,1)) * (v0_clean' * diff_sp);
             W_grad = W_grad + (D.sparsity.cost/size(v0,1)) * (v0' * diff_sp);
+            clear diff_sp;
         end
 
         if D.cae.cost > 0 && D.hidden.use_tanh == 0
@@ -219,6 +236,37 @@ for step=1:n_epochs
             end
 
             D.W = D.W - D.learning.lrate * (W_grad_old + weight_decay * D.W) ./ sqrt(D.adagrad.W + D.adagrad.epsilon);
+        elseif D.adadelta.use
+            vbias_grad_old = (1-momentum) * vbias_grad + momentum * vbias_grad_old;
+            hbias_grad_old = (1-momentum) * hbias_grad + momentum * hbias_grad_old;
+            W_grad_old = (1-momentum) * W_grad + momentum * W_grad_old;
+
+            D.adadelta.gW = D.adadelta.momentum * D.adadelta.gW + (1 - D.adadelta.momentum) * W_grad_old.^2;
+            D.adadelta.gvbias = D.adadelta.momentum * D.adadelta.gvbias + (1 - D.adadelta.momentum) * vbias_grad_old.^2';
+            D.adadelta.ghbias = D.adadelta.momentum * D.adadelta.ghbias + (1 - D.adadelta.momentum) * hbias_grad_old.^2';
+
+            if D.rica.cost <= 0
+                dvbias = -(vbias_grad_old' + ...
+                    weight_decay * D.vbias) .* (sqrt(D.adadelta.vbias + D.adadelta.epsilon) ./ sqrt(D.adadelta.gvbias + D.adadelta.epsilon));
+                dhbias = -(hbias_grad_old' + ...
+                    weight_decay * D.hbias) .* (sqrt(D.adadelta.hbias + D.adadelta.epsilon) ./ sqrt(D.adadelta.ghbias + D.adadelta.epsilon));
+
+                D.vbias = D.vbias + dvbias;
+                D.hbias = D.hbias + dhbias;
+            end
+
+            dW = -(W_grad_old + weight_decay * D.W) .* ...
+                (sqrt(D.adadelta.W + D.adadelta.epsilon) ./ sqrt(D.adadelta.gW + D.adadelta.epsilon));
+            D.W = D.W + dW;
+
+            D.adadelta.W = D.adadelta.momentum * D.adadelta.W + (1 - D.adadelta.momentum) * dW.^2;
+            clear dW;
+
+            if D.rica.cost <= 0
+                D.adadelta.vbias = D.adadelta.momentum * D.adadelta.vbias + (1 - D.adadelta.momentum) * dvbias.^2;
+                D.adadelta.hbias = D.adadelta.momentum * D.adadelta.hbias + (1 - D.adadelta.momentum) * dhbias.^2;
+                clear dvbias dhbias;
+            end
         else
             if D.learning.lrate_anneal > 0 && (step >= D.learning.lrate_anneal * n_epochs)
                 anneal_counter = anneal_counter + 1;
@@ -270,7 +318,11 @@ for step=1:n_epochs
                 vr = sigmoid(vr, D.visible.use_tanh);
             end
 
-            rerr = mean(sum((v0valid - vr).^2,2));
+            if D.data.binary
+                rerr = -mean(sum(v0valid .* log(max(vr, 1e-16)) + (1 - v0valid) .* log(max(1 - vr, 1e-16)), 2));
+            else
+                rerr = mean(sum((v0valid - vr).^2,2));
+            end
             if use_gpu > 0
                 rerr = gather(rerr);
             end
@@ -339,6 +391,14 @@ for step=1:n_epochs
             D.adagrad.W = gather(D.adagrad.W);
             D.adagrad.vbias = gather(D.adagrad.vbias);
             D.adagrad.hbias = gather(D.adagrad.hbias);
+        elseif D.adadelta.use
+            D.adadelta.W = gather(D.adadelta.W);
+            D.adadelta.vbias = gather(D.adadelta.vbias);
+            D.adadelta.hbias = gather(D.adadelta.hbias);
+
+            D.adadelta.gW = gather(D.adadelta.gW);
+            D.adadelta.gvbias = gather(D.adadelta.gvbias);
+            D.adadelta.ghbias = gather(D.adadelta.ghbias);
         end
     end
 
@@ -375,6 +435,14 @@ if use_gpu > 0
         D.adagrad.W = gather(D.adagrad.W);
         D.adagrad.vbias = gather(D.adagrad.vbias);
         D.adagrad.hbias = gather(D.adagrad.hbias);
+    elseif D.adadelta.use
+        D.adadelta.W = gather(D.adadelta.W);
+        D.adadelta.vbias = gather(D.adadelta.vbias);
+        D.adadelta.hbias = gather(D.adadelta.hbias);
+
+        D.adadelta.gW = gather(D.adadelta.gW);
+        D.adadelta.gvbias = gather(D.adadelta.gvbias);
+        D.adadelta.ghbias = gather(D.adadelta.ghbias);
     end
 end
 

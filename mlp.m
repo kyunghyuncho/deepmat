@@ -129,6 +129,15 @@ for step=1:n_epochs
                 end
                 M.adagrad.biases{l} = gpuArray(single(M.adagrad.biases{l}));
             end
+        elseif M.adadelta.use
+            for l = 1:n_layers
+                if l < n_layers 
+                    M.adadelta.gW{l} = gpuArray(single(M.adadelta.gW{l}));
+                    M.adadelta.W{l} = gpuArray(single(M.adadelta.W{l}));
+                end
+                M.adadelta.gbiases{l} = gpuArray(single(M.adadelta.gbiases{l}));
+                M.adadelta.biases{l} = gpuArray(single(M.adadelta.biases{l}));
+            end
         end
     end
 
@@ -192,7 +201,12 @@ for step=1:n_epochs
         delta = cell(n_layers, 1);
         delta{end} = h0{end} - targets(mb_start:mb_end, :);
 
-        rerr = mean(sum(delta{end}.^2,2));
+        if M.data.binary
+            xt = targets(mb_start:mb_end, :);
+            rerr = -mean(sum(xt .* log(max(h0{end}, 1e-16)) + (1 - xt) .* log(max(1 - h0{end}, 1e-16)), 2));
+        else
+            rerr = mean(sum(delta{end}.^2,2));
+        end
         if use_gpu > 0
             rerr = gather(rerr);
         end
@@ -242,6 +256,44 @@ for step=1:n_epochs
                 end
             end
 
+        elseif M.adadelta.use
+            % update
+            for l = 1:n_layers
+                biases_grad_old{l} = (1 - momentum) * biases_grad{l} + momentum * biases_grad_old{l};
+                if l < n_layers
+                    W_grad_old{l} = (1 - momentum) * W_grad{l} + momentum * W_grad_old{l};
+                end
+            end
+
+            for l = 1:n_layers
+                if l < n_layers
+                    M.adadelta.gW{l} = M.adadelta.momentum * M.adadelta.gW{l} + (1 - M.adadelta.momentum) * W_grad_old{l}.^2;
+                end
+
+                M.adadelta.gbiases{l} = M.adadelta.momentum * M.adadelta.gbiases{l} + (1 - M.adadelta.momentum) * biases_grad_old{l}.^2';
+            end
+
+            for l = 1:n_layers
+                dbias = -(biases_grad_old{l}' + ...
+                    weight_decay * M.biases{l}) .* (sqrt(M.adadelta.biases{l} + M.adadelta.epsilon) ./ ...
+                    sqrt(M.adadelta.gbiases{l} + M.adadelta.epsilon));
+                M.biases{l} = M.biases{l} + dbias;
+
+                M.adadelta.biases{l} = M.adadelta.momentum * M.adadelta.biases{l} + (1 - M.adadelta.momentum) * dbias.^2;
+                clear dbias;
+
+                if l < n_layers
+                    dW = -(W_grad_old{l} + ...
+                        weight_decay * M.W{l}) .* (sqrt(M.adadelta.W{l} + M.adadelta.epsilon) ./ ...
+                        sqrt(M.adadelta.gW{l} + M.adadelta.epsilon));
+                    M.W{l} = M.W{l} + dW;
+
+                    M.adadelta.W{l} = M.adadelta.momentum * M.adadelta.W{l} + (1 - M.adadelta.momentum) * dW.^2;
+
+                    clear dW;
+                end
+
+            end
         else
             if M.learning.lrate_anneal > 0 && (step >= M.learning.lrate_anneal * n_epochs)
                 anneal_counter = anneal_counter + 1;
@@ -291,6 +343,13 @@ for step=1:n_epochs
                 vr = gather(vr);
             end
 
+            if M.data.binary
+                xt = valid_targets(rndidx(1:round(n_valid * valid_portion)));
+                yt = vr;
+                rerr = -mean(sum(xt .* log(max(yt, 1e-16)) + (1 - xt) .* log(max(1 - yt, 1e-16)), 2));
+            else
+                rerr = mean(sum((valid_targets(rndidx(1:round(n_valid * valid_portion))) - vr).^2,2));
+            end
             rerr = mean(sum((valid_targets(rndidx(1:round(n_valid * valid_portion))) - vr).^2,2));
             if use_gpu > 0
                 rerr = gather(rerr);
@@ -366,6 +425,15 @@ for step=1:n_epochs
                 end
                 M.adagrad.biases{l} = gather(M.adagrad.biases{l});
             end
+        elseif M.adadelta.use
+            for l = 1:n_layers
+                if l < n_layers
+                    M.adadelta.W{l} = gather(M.adadelta.W{l});
+                    M.adadelta.gW{l} = gather(M.adadelta.gW{l});
+                end
+                M.adadelta.biases{l} = gather(M.adadelta.biases{l});
+                M.adadelta.gbiases{l} = gather(M.adadelta.gbiases{l});
+            end
         end
     end
 
@@ -404,6 +472,15 @@ if use_gpu > 0
                 M.adagrad.W{l} = gather(M.adagrad.W{l});
             end
             M.adagrad.biases{l} = gather(M.adagrad.biases{l});
+        end
+    elseif M.adadelta.use
+        for l = 1:n_layers
+            if l < n_layers
+                M.adadelta.W{l} = gather(M.adadelta.W{l});
+                M.adadelta.gW{l} = gather(M.adadelta.gW{l});
+            end
+            M.adadelta.biases{l} = gather(M.adadelta.biases{l});
+            M.adadelta.gbiases{l} = gather(M.adadelta.gbiases{l});
         end
     end
 end

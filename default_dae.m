@@ -89,6 +89,17 @@ function [D] = default_dae (n_visible, n_hidden);
     D.adagrad.vbias = zeros(n_visible, 1);
     D.adagrad.hbias = zeros(n_hidden, 1);
 
+    % adadelta
+    D.adadelta.use = 0;
+    D.adadelta.epsilon = 1e-6;
+    D.adadelta.momentum = 0.99;
+    D.adadelta.gW = zeros(n_visible, n_hidden);
+    D.adadelta.gvbias = zeros(n_visible, 1);
+    D.adadelta.ghbias = zeros(n_hidden, 1);
+    D.adadelta.W = zeros(n_visible, n_hidden);
+    D.adadelta.vbias = zeros(n_visible, 1);
+    D.adadelta.hbias = zeros(n_hidden, 1);
+
     % iteration
     D.iteration.n_epochs = 100;
     D.iteration.n_updates = 0;
