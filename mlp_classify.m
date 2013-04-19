@@ -15,10 +15,14 @@
 %along with this program; if not, write to the Free Software
 %Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 %
-function [c, posterior] = mlp_classify(M, x0, Q0)
+function [c, posterior] = mlp_classify(M, x0, Q0, raw)
 
 if nargin < 3
     Q0 = [];
+end
+
+if nargin < 4
+    raw = 0;
 end
 
 layers = M.structure.layers;
@@ -65,6 +69,10 @@ else
     end
 end
 
-[maxp, c] = max(posterior, [], 2);
+if raw
+    c = posterior;
+else
+    [maxp, c] = max(posterior, [], 2);
+end
 
 

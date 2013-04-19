@@ -51,6 +51,19 @@ if size(targets, 2) == 1 && M.output.binary
     targets = new_targets;
 end
 
+if size(valid_targets, 2) == 1 && M.output.binary
+    % populate the target labels
+    n_classes = max(valid_targets(:));
+    n_valid_samples = size(valid_targets, 1);
+    new_targets = zeros(n_valid_samples, n_classes);
+
+    for ti = 1:n_valid_samples
+        new_targets(ti, valid_targets(ti)) = 1; % well?
+    end
+    
+    valid_targets = new_targets;
+end
+
 minibatch_sz = M.learning.minibatch_sz;
 n_minibatches = ceil(n_samples / minibatch_sz);
 
@@ -201,7 +214,7 @@ for step=1:n_epochs
         delta = cell(n_layers, 1);
         delta{end} = h0{end} - targets(mb_start:mb_end, :);
 
-        if M.data.binary
+        if M.output.binary
             xt = targets(mb_start:mb_end, :);
             rerr = -mean(sum(xt .* log(max(h0{end}, 1e-16)) + (1 - xt) .* log(max(1 - h0{end}, 1e-16)), 2));
         else
@@ -338,19 +351,22 @@ for step=1:n_epochs
             rndidx = randperm(n_valid);
             v0valid = gpuArray(single(valid_patches(rndidx(1:round(n_valid * valid_portion)),:)));
 
-            vr = mlp_classify(M, v0valid);
+            if M.output.binary
+                vr = mlp_classify(M, v0valid, [], 1);
+            else
+                vr = mlp_classify(M, v0valid);
+            end
             if use_gpu > 0
                 vr = gather(vr);
             end
 
-            if M.data.binary
-                xt = valid_targets(rndidx(1:round(n_valid * valid_portion)));
+            if M.output.binary
+                xt = valid_targets(rndidx(1:round(n_valid * valid_portion)), :);
                 yt = vr;
                 rerr = -mean(sum(xt .* log(max(yt, 1e-16)) + (1 - xt) .* log(max(1 - yt, 1e-16)), 2));
             else
-                rerr = mean(sum((valid_targets(rndidx(1:round(n_valid * valid_portion))) - vr).^2,2));
+                rerr = mean(sum((valid_targets(rndidx(1:round(n_valid * valid_portion), :)) - vr).^2,2));
             end
-            rerr = mean(sum((valid_targets(rndidx(1:round(n_valid * valid_portion))) - vr).^2,2));
             if use_gpu > 0
                 rerr = gather(rerr);
             end
