@@ -111,7 +111,7 @@ M.iteration.n_epochs = 100;
 if do_pretrain
     for l = 1:n_layers-2
         if l > 1
-            if use_tanh
+            if ~use_tanh
                 M.biases{l+1} = Ds{l}.hbias;
                 M.W{l} = Ds{l}.W;
             else
