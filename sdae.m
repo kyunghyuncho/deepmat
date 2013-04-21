@@ -171,7 +171,11 @@ for step=1:n_epochs
         hr = sdae_get_hidden(v0_clean, S);
         vr = sdae_get_visible(hr, S);
 
-        rerr = mean(sum((v0_clean - vr).^2,2));
+        if S.data.binary
+            rerr = -mean(sum(v0_clean .* log(max(vr, 1e-16)) + (1 - v0_clean) .* log(max(1 - vr, 1e-16)), 2));
+        else
+            rerr = mean(sum((v0_clean - vr).^2,2));
+        end
         if use_gpu > 0
             rerr = gather(rerr);
         end
@@ -288,7 +292,11 @@ for step=1:n_epochs
             hr = sdae_get_hidden(v0valid, S);
             vr = sdae_get_visible(hr, S);
 
-            rerr = mean(sum((v0valid - vr).^2,2));
+            if S.data.binary
+                rerr = -mean(sum(v0valid .* log(max(vr, 1e-16)) + (1 - v0valid) .* log(max(1 - vr, 1e-16)), 2));
+            else
+                rerr = mean(sum((v0valid - vr).^2,2));
+            end
             if use_gpu > 0
                 rerr = gather(rerr);
             end

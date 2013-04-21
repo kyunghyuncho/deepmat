@@ -154,7 +154,7 @@ for step=1:n_epochs
             vr = sigmoid(vr, D.visible.use_tanh);
         end
 
-        if D.data.binary
+        if D.data.binary && ~D.visible.use_tanh
             rerr = -mean(sum(v0_clean .* log(max(vr, 1e-16)) + (1 - v0_clean) .* log(max(1 - vr, 1e-16)), 2));
         else
             rerr = mean(sum((v0_clean - vr).^2,2));
@@ -318,7 +318,7 @@ for step=1:n_epochs
                 vr = sigmoid(vr, D.visible.use_tanh);
             end
 
-            if D.data.binary
+            if D.data.binary && ~D.visible.use_tanh
                 rerr = -mean(sum(v0valid .* log(max(vr, 1e-16)) + (1 - v0valid) .* log(max(1 - vr, 1e-16)), 2));
             else
                 rerr = mean(sum((v0valid - vr).^2,2));
