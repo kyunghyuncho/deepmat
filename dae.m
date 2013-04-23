@@ -130,8 +130,9 @@ for step=1:n_epochs
         if D.noise.drop > 0
             mask = binornd(1, D.noise.drop, size(v0));
             if D.visible.use_tanh
-                up_mask = 2 * (binornd(1, 0.5, size(v0)) - 0.5);
-                v0 = v0 .* mask + up_mask .* (1 - mask);
+                %updown_mask = 2 * (binornd(1, 0.5, size(v0)) - 0.5);
+                %v0 = v0 .* mask + updown_mask .* (1 - mask);
+                v0 = v0 .* mask;
             else
                 v0 = v0 .* mask;
                 clear mask;
