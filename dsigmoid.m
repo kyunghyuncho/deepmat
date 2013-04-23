@@ -5,7 +5,7 @@ if nargin < 2
 end
 
 if use_tanh
-    y = sech(x).^2;
+    y = 1 - x.^2;
 else
     y = x .* (1 - x);
 end
