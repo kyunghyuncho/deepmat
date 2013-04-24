@@ -26,7 +26,7 @@ for l = n_layers-1:-1:1
     x_mf = bsxfun(@plus, x_mf * S.W{l}', S.biases{l}');
 
     if l > 1 || S.data.binary
-        x_mf = sigmoid(x_mf);
+        x_mf = sigmoid(x_mf, S.hidden.use_tanh);
     end
 end
 
