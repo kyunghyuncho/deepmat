@@ -242,9 +242,15 @@ for step=1:n_epochs
             hbias_grad_old = (1-momentum) * hbias_grad + momentum * hbias_grad_old;
             W_grad_old = (1-momentum) * W_grad + momentum * W_grad_old;
 
-            D.adadelta.gW = D.adadelta.momentum * D.adadelta.gW + (1 - D.adadelta.momentum) * W_grad_old.^2;
-            D.adadelta.gvbias = D.adadelta.momentum * D.adadelta.gvbias + (1 - D.adadelta.momentum) * vbias_grad_old.^2';
-            D.adadelta.ghbias = D.adadelta.momentum * D.adadelta.ghbias + (1 - D.adadelta.momentum) * hbias_grad_old.^2';
+            if D.iteration.n_updates == 1
+                adamom = 0;
+            else
+                adamom = D.adadelta.momentum;
+            end
+
+            D.adadelta.gW = adamom * D.adadelta.gW + (1 - adamom) * W_grad_old.^2;
+            D.adadelta.gvbias = adamom * D.adadelta.gvbias + (1 - adamom) * vbias_grad_old.^2';
+            D.adadelta.ghbias = adamom * D.adadelta.ghbias + (1 - adamom) * hbias_grad_old.^2';
 
             if D.rica.cost <= 0
                 dvbias = -(vbias_grad_old' + ...
@@ -260,12 +266,12 @@ for step=1:n_epochs
                 (sqrt(D.adadelta.W + D.adadelta.epsilon) ./ sqrt(D.adadelta.gW + D.adadelta.epsilon));
             D.W = D.W + dW;
 
-            D.adadelta.W = D.adadelta.momentum * D.adadelta.W + (1 - D.adadelta.momentum) * dW.^2;
+            D.adadelta.W = adamom * D.adadelta.W + (1 - adamom) * dW.^2;
             clear dW;
 
             if D.rica.cost <= 0
-                D.adadelta.vbias = D.adadelta.momentum * D.adadelta.vbias + (1 - D.adadelta.momentum) * dvbias.^2;
-                D.adadelta.hbias = D.adadelta.momentum * D.adadelta.hbias + (1 - D.adadelta.momentum) * dhbias.^2;
+                D.adadelta.vbias = adamom * D.adadelta.vbias + (1 - adamom) * dvbias.^2;
+                D.adadelta.hbias = adamom * D.adadelta.hbias + (1 - adamom) * dhbias.^2;
                 clear dvbias dhbias;
             end
         else

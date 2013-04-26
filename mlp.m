@@ -278,12 +278,18 @@ for step=1:n_epochs
                 end
             end
 
+            if M.iteration.n_updates == 1
+                adamom = 0;
+            else
+                adamom = M.adadelta.momentum;
+            end
+
             for l = 1:n_layers
                 if l < n_layers
-                    M.adadelta.gW{l} = M.adadelta.momentum * M.adadelta.gW{l} + (1 - M.adadelta.momentum) * W_grad_old{l}.^2;
+                    M.adadelta.gW{l} = adamom * M.adadelta.gW{l} + (1 - adamom) * W_grad_old{l}.^2;
                 end
 
-                M.adadelta.gbiases{l} = M.adadelta.momentum * M.adadelta.gbiases{l} + (1 - M.adadelta.momentum) * biases_grad_old{l}.^2';
+                M.adadelta.gbiases{l} = adamom * M.adadelta.gbiases{l} + (1 - adamom) * biases_grad_old{l}.^2';
             end
 
             for l = 1:n_layers
@@ -292,7 +298,7 @@ for step=1:n_epochs
                     sqrt(M.adadelta.gbiases{l} + M.adadelta.epsilon));
                 M.biases{l} = M.biases{l} + dbias;
 
-                M.adadelta.biases{l} = M.adadelta.momentum * M.adadelta.biases{l} + (1 - M.adadelta.momentum) * dbias.^2;
+                M.adadelta.biases{l} = adamom * M.adadelta.biases{l} + (1 - adamom) * dbias.^2;
                 clear dbias;
 
                 if l < n_layers
@@ -301,7 +307,7 @@ for step=1:n_epochs
                         sqrt(M.adadelta.gW{l} + M.adadelta.epsilon));
                     M.W{l} = M.W{l} + dW;
 
-                    M.adadelta.W{l} = M.adadelta.momentum * M.adadelta.W{l} + (1 - M.adadelta.momentum) * dW.^2;
+                    M.adadelta.W{l} = adamom * M.adadelta.W{l} + (1 - adamom) * dW.^2;
 
                     clear dW;
                 end

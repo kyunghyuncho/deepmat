@@ -163,7 +163,7 @@ for step=1:n_epochs
 
         % compute reconstruction error
         hr = binornd(1, h0, size(h0,1), size(h0,2));
-        vr = sigmoid(bsxfun(@plus,hr * R.W',R.vbias'));
+        vr = bsxfun(@plus,hr * R.W',R.vbias');
 
         R.signals.recon_errors = [R.signals.recon_errors mean(sum((v0 - vr).^2,2))];
 
