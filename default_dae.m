@@ -24,10 +24,11 @@ function [D] = default_dae (n_visible, n_hidden);
     D.hidden.binary = 1;
     %D.data.binary = 0; % for linear units
 
-    % use sigmoid nonlinearity
+    % nonlinearity: the name of the variable will change in the later revision
+    % 0 - sigmoid
+    % 1 - tanh
+    % 2 - relu
     D.hidden.use_tanh = 0;
-    %% use tanh nonlinearity 
-    %D.hidden.use_tanh = 1;
 
     % use sigmoid nonlinearity
     D.visible.use_tanh = 0;

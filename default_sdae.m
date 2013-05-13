@@ -24,10 +24,11 @@ function [S] = default_sdae (layers)
     S.bottleneck.binary = 1;
     %S.bottleneck.binary = 0;
 
-    % use sigmoid nonlinearity
+    % nonlinearity: the name of the variable will change in the later revision
+    % 0 - sigmoid
+    % 1 - tanh
+    % 2 - relu
     S.hidden.use_tanh = 0;
-    %% use tanh nonlinearity 
-    %S.hidden.use_tanh = 1;
 
     % learning parameters
     S.learning.lrate = 1e-3;

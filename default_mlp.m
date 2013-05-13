@@ -24,10 +24,11 @@ function [M] = default_mlp (layers)
     M.output.binary = 1;% for classification
     %M.output.binary = 0; % for regression
 
-    % use sigmoid nonlinearity
+    % nonlinearity: the name of the variable will change in the later revision
+    % 0 - sigmoid
+    % 1 - tanh
+    % 2 - relu
     M.hidden.use_tanh = 0;
-    %% use tanh nonlinearity 
-    %M.hidden.use_tanh = 1;
 
     % is it being initialized with a DBM?
     M.dbm.use = 0;

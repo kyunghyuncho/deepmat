@@ -5,9 +5,12 @@ if nargin < 2
     use_tanh = 0;
 end
 
-if use_tanh
+switch use_tanh
+case 0
+    y = 1./(1 + exp(-x));
+case 1
     y = tanh(x);
-else
-    y = 1./(1 + exp (-x));
+case 2
+    y = max (x, 0);
 end
 
