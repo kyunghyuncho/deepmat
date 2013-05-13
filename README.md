@@ -19,13 +19,13 @@ WARNING: this is not my main code, and there is no warranty attached!
 
 = Denoising Autoencoder (Tied Weights) =
  - Binary/Gaussian Visible Units + Binary(Sigmoid)/Gaussian Hidden Units
- - tanh/sigm nonlinearities
+ - tanh/sigm/relu nonlinearities
  - Shallow: sparsity, contractive, soft-sparsity (log-cosh) regularization
  - Deep: stochastic backprop
  - Adagrad, Adadelta
 
 = Multi-layer Perceptron =
  - Stochastic Backpropagation, Dropout
- - tanh/sigm nonlinearities
+ - tanh/sigm/relu nonlinearities
  - Adagrad, Adadelta
 
