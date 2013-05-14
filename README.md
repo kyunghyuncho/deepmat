@@ -28,4 +28,5 @@ WARNING: this is not my main code, and there is no warranty attached!
  - Stochastic Backpropagation, Dropout
  - tanh/sigm/relu nonlinearities
  - Adagrad, Adadelta
+ - Balanced minibatches using crossvalind()
 

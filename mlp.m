@@ -15,7 +15,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 %
-function [M] = mlp(M, patches, targets, valid_patches, valid_targets, valid_portion);
+function [M] = mlp(M, patches, targets, valid_patches, valid_targets, valid_portion, use_cvp);
 
 if nargin < 3
     early_stop = 0;
@@ -28,6 +28,10 @@ else
     valid_best_err = -Inf;
 end
 
+if nargin < 7
+    use_cvp = 1;
+end
+
 actual_lrate = M.learning.lrate;
 
 n_samples = size(patches, 1);
@@ -37,6 +41,13 @@ n_layers = length(layers);
 
 if layers(1) ~= size(patches, 2)
     error('Data is not properly aligned');
+end
+
+minibatch_sz = M.learning.minibatch_sz;
+n_minibatches = ceil(n_samples / minibatch_sz);
+
+if use_cvp
+    cvp = crossvalind('Kfold', targets, n_minibatches);
 end
 
 if size(targets, 2) == 1 && M.output.binary
@@ -63,9 +74,6 @@ if size(valid_targets, 2) == 1 && M.output.binary
     
     valid_targets = new_targets;
 end
-
-minibatch_sz = M.learning.minibatch_sz;
-n_minibatches = ceil(n_samples / minibatch_sz);
 
 n_epochs = M.iteration.n_epochs;
 
@@ -157,11 +165,17 @@ for step=1:n_epochs
     for mb=1:n_minibatches
         M.iteration.n_updates = M.iteration.n_updates + 1;
 
-        mb_start = (mb - 1) * minibatch_sz + 1;
-        mb_end = min(mb * minibatch_sz, n_samples);
+        if use_cvp
+            v0 = patches(cvp == mb, :);
+            t0 = targets(cvp == mb, :);
+        else
+            mb_start = (mb - 1) * minibatch_sz + 1;
+            mb_end = min(mb * minibatch_sz, n_samples);
 
-        % p_0
-        v0 = patches(mb_start:mb_end, :);
+            % p_0
+            v0 = patches(mb_start:mb_end, :);
+            t0 = targets(mb_start:mb_end, :);
+        end
         mb_sz = size(v0,1);
 
         if use_gpu > 0
@@ -212,10 +226,14 @@ for step=1:n_epochs
 
         % backprop
         delta = cell(n_layers, 1);
-        delta{end} = h0{end} - targets(mb_start:mb_end, :);
+        delta{end} = h0{end} - t0;
 
         if M.output.binary
-            xt = targets(mb_start:mb_end, :);
+            if use_cvp
+                xt = targets(cvp == mb, :);
+            else
+                xt = targets(mb_start:mb_end, :);
+            end
             rerr = -mean(sum(xt .* log(max(h0{end}, 1e-16)) + (1 - xt) .* log(max(1 - h0{end}, 1e-16)), 2));
         else
             rerr = mean(sum(delta{end}.^2,2));
