@@ -387,7 +387,11 @@ for step=1:n_epochs
             if M.output.binary
                 xt = valid_targets(rndidx(1:round(n_valid * valid_portion)), :);
                 yt = vr;
-                rerr = -mean(sum(xt .* log(max(yt, 1e-16)) + (1 - xt) .* log(max(1 - yt, 1e-16)), 2));
+                [mp, mi] = max(gather(yt), [], 2);
+                [tp, ti] = max(gather(xt), [], 2);
+
+                n_correct = sum(mi == ti);
+                rerr = 1 - n_correct/(round(n_valid * valid_portion));
             else
                 rerr = mean(sum((valid_targets(rndidx(1:round(n_valid * valid_portion), :)) - vr).^2,2));
             end
