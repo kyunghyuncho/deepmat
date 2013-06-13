@@ -16,6 +16,10 @@
 % Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 %
 function [M] = default_mlp (layers)
+    % structure
+    n_layers = length(layers);
+    M.structure.layers = layers;
+
     % data type
     M.data.binary = 1;
     %M.data.binary = 0;
@@ -44,6 +48,11 @@ function [M] = default_mlp (layers)
     M.valid_min_epochs = 10;
 
     M.dropout.use = 0;
+    % by default
+    M.dropout.probs = cell(n_layers, 1);
+    for l = 1:n_layers
+        M.dropout.probs{l} = 0.5 * ones(layers(l), 1);
+    end
 
     M.do_normalize = 1;
     M.do_normalize_std = 1;
@@ -58,10 +67,6 @@ function [M] = default_mlp (layers)
     % denoising
     M.noise.drop = 0.1;
     M.noise.level = 0.1;
-
-    % structure
-    n_layers = length(layers);
-    M.structure.layers = layers;
 
     % initializations
     M.W = cell(n_layers, 1);

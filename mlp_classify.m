@@ -33,7 +33,7 @@ posterior = x0;
 if isfield(M, 'dbm') && M.dbm.use
     for l = 2:n_layers
         if M.dropout.use && l > 2
-            posterior = posterior * (M.W{l-1}/2);
+            posterior = posterior * bsxfun(@times, (M.W{l-1}), 1 - M.dropout.probs{l-1});
         else
             posterior = posterior * M.W{l-1};
         end

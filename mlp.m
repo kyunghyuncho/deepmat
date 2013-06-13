@@ -199,16 +199,16 @@ for step=1:n_epochs
         h0{1} = v0;
 
         for l = 2:n_layers
-            if M.dropout.use && l > 2
-                h0mask = binornd(1, 0.5, size(h0{l-1}));
-                h0{l} = bsxfun(@plus, (h0mask .* h0{l-1}) * M.W{l-1}, M.biases{l}');
-                clear h0mask;
-            else
-                h0{l} = bsxfun(@plus, h0{l-1} * M.W{l-1}, M.biases{l}');
-            end
+            h0{l} = bsxfun(@plus, h0{l-1} * M.W{l-1}, M.biases{l}');
 
             if l < n_layers
                 h0{l} = sigmoid(h0{l}, M.hidden.use_tanh);
+            end
+
+            if M.dropout.use && l < n_layers
+                h0mask = single(bsxfun(@minus, rand(size(h0{l})), M.dropout.probs{l}') < 0);
+                h0{l} = h0mask .* h0{l};
+                clear h0mask;
             end
 
             if l == n_layers && M.output.binary
