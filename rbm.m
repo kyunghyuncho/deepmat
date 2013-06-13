@@ -139,6 +139,18 @@ for step=1:n_epochs
             R.fast.hbias = gpuArray(single(R.fast.hbias));
             R.fast.sigmas = gpuArray(single(R.fast.sigmas));
         end
+
+        if R.adadelta.use
+            R.adadelta.gW = gpuArray(single(R.adadelta.gW));
+            R.adadelta.gvbias = gpuArray(single(R.adadelta.gvbias));
+            R.adadelta.ghbias = gpuArray(single(R.adadelta.ghbias));
+            R.adadelta.gsigmas = gpuArray(single(R.adadelta.gsigmas));
+
+            R.adadelta.W = gpuArray(single(R.adadelta.W));
+            R.adadelta.vbias = gpuArray(single(R.adadelta.vbias));
+            R.adadelta.hbias = gpuArray(single(R.adadelta.hbias));
+            R.adadelta.sigmas = gpuArray(single(R.adadelta.sigmas));
+        end
     end
 
     for mb=1:n_minibatches
@@ -331,106 +343,165 @@ for step=1:n_epochs
             hbias_grad = hbias_grad - vacts * W_grad;
         end
 
-        if R.learning.lrate_anneal > 0 && (step >= R.learning.lrate_anneal * n_epochs)
-            anneal_counter = anneal_counter + 1;
-            actual_lrate = actual_lrate0 / anneal_counter;
+        if R.adadelta.use
+            vbias_grad_old = (1-momentum) * vbias_grad + momentum * vbias_grad_old;
+            hbias_grad_old = (1-momentum) * hbias_grad + momentum * hbias_grad_old;
+            W_grad_old = (1-momentum) * W_grad + momentum * W_grad_old;
+
+            if R.data.binary == 0
+                if update_sigmas == 1
+                    sigma_grad_old = (1-momentum) * sigma_grad + momentum * sigma_grad_old;
+                end
+            end
+
+            if R.iteration.n_updates == 1
+                adamom = 0;
+            else
+                adamom = R.adadelta.momentum;
+            end
+
+            R.adadelta.gW = adamom * R.adadelta.gW + (1 - adamom) * W_grad_old.^2;
+            R.adadelta.gvbias = adamom * R.adadelta.gvbias + (1 - adamom) * vbias_grad_old.^2';
+            R.adadelta.ghbias = adamom * R.adadelta.ghbias + (1 - adamom) * hbias_grad_old.^2';
+            if R.data.binary == 0 && update_sigmas
+                R.adadelta.gsigmas = adamom * R.adadelta.gsigmas + (1 - adamom) * sigmas_grad_old.^2';
+            end
+
+            dvbias = (vbias_grad_old' - ...
+                weight_decay * R.vbias) .* (sqrt(R.adadelta.vbias + R.adadelta.epsilon) ./ sqrt(R.adadelta.gvbias + R.adadelta.epsilon));
+            dhbias = (hbias_grad_old' - ...
+                weight_decay * R.hbias) .* (sqrt(R.adadelta.hbias + R.adadelta.epsilon) ./ sqrt(R.adadelta.ghbias + R.adadelta.epsilon));
+            if R.data.binary == 0 && update_sigmas
+                dsigmas = (sigmas_grad_old' - ...
+                    weight_decay * R.sigmas) .* (sqrt(R.adadelta.sigmas + R.adadelta.epsilon) ./ sqrt(R.adadelta.gsigmas + R.adadelta.epsilon));
+            end
+
+            dW = (W_grad_old - weight_decay * R.W) .* ...
+                (sqrt(R.adadelta.W + R.adadelta.epsilon) ./ sqrt(R.adadelta.gW + R.adadelta.epsilon));
+
+            R.vbias = R.vbias + dvbias;
+            R.hbias = R.hbias + dhbias;
+            R.W = R.W + dW;
+
+            if R.data.binary == 0
+                if update_sigmas == 1
+                    logsigmas = logsigmas + dsigmas;
+                    logsigmas = max(epsilon_logsigma, min(logsigmas_ub, logsigmas));
+                    R.sigmas = sqrt(exp(logsigmas));
+                end
+            end
+
+            R.adadelta.vbias = adamom * R.adadelta.vbias + (1 - adamom) * dvbias.^2;
+            R.adadelta.hbias = adamom * R.adadelta.hbias + (1 - adamom) * dhbias.^2;
+            R.adadelta.W = adamom * R.adadelta.W + (1 - adamom) * dW.^2;
+            if R.data.binary == 0 && update_sigmas
+                R.adadelta.sigmas = adamom * R.adadelta.sigmas + (1 - adamom) * dsigmas.^2;
+            end
+
+            clear dvbias dhbias dsigmas;
+            clear dW;
         else
-            % now we find the optimal(?) step size
-            if adaptive_lrate == 1
-                base_lrate = actual_lrate;
+            if R.learning.lrate_anneal > 0 && (step >= R.learning.lrate_anneal * n_epochs)
+                anneal_counter = anneal_counter + 1;
+                actual_lrate = actual_lrate0 / anneal_counter;
+            else
+                % now we find the optimal(?) step size
+                if adaptive_lrate == 1
+                    base_lrate = actual_lrate;
 
-                % we assume that the fantasy particles are truly from the model.
-                vf = v1;
-                if (R.adaptive_lrate.alrate_use_current_batch)
-                    vd = v0;
-                else
-                    vd = v0_next;
-                end
-
-                candidate_lrates;
-
-                if R.data.binary
-                    [cE, cEmin, cEmax, cEs] = rbm_energy(vf, R.W, R.vbias, R.hbias);
-                    [dcE, dcEmin, dcEmax, dcEs] = rbm_energy(vd, R.W, R.vbias, R.hbias);
-                else
-                    [cE, cEmin, cEmax, cEs] = grbm_energy(vf, R.W, R.vbias, R.hbias, R.sigmas);
-                    [dcE, dcEmin, dcEmax, dcEs] = grbm_energy(vd, R.W, R.vbias, R.hbias, R.sigmas);
-                end
-                % current
-                curr_cost = sum(-dcEs);
-
-                % search
-                costs = zeros(length(cand_lrates), 1);
-                for s=1:length(cand_lrates)
-                    cand_lrate = cand_lrates(s);
-
-                    vbias_test = R.vbias + cand_lrate * (momentum * vbias_grad_old' + (1-momentum) * vbias_grad');
-                    hbias_test = R.hbias + cand_lrate * (momentum * hbias_grad_old' + (1-momentum) * hbias_grad');
-                    W_test = R.W + cand_lrate * (momentum * W_grad_old + (1-momentum) * W_grad);
-                    if R.data.binary == 0
-                        if update_sigmas == 1
-                            logsigmas_test = logsigmas + cand_lrate * ((1-momentum) * sigma_grad + momentum * sigma_grad_old);
-                            logsigmas_test = max(epsilon_logsigma, min(logsigmas_ub, logsigmas_test));
-                            sigmas_test = sqrt(exp(logsigmas_test));
-                        else
-                            sigmas_test = R.sigmas;
-                        end
+                    % we assume that the fantasy particles are truly from the model.
+                    vf = v1;
+                    if (R.adaptive_lrate.alrate_use_current_batch)
+                        vd = v0;
+                    else
+                        vd = v0_next;
                     end
-                    
+
+                    candidate_lrates;
 
                     if R.data.binary
-                        [dE, dEmin, dEmax, dEs] = rbm_energy(vd, W_test, vbias_test, hbias_test);
-                        [fE, fEmin, fEmax, fEs] = rbm_energy(vf, W_test, vbias_test, hbias_test);
+                        [cE, cEmin, cEmax, cEs] = rbm_energy(vf, R.W, R.vbias, R.hbias);
+                        [dcE, dcEmin, dcEmax, dcEs] = rbm_energy(vd, R.W, R.vbias, R.hbias);
                     else
-                        [dE, dEmin, dEmax, dEs] = grbm_energy(vd, W_test, vbias_test, hbias_test, sigmas_test);
-                        [fE, fEmin, fEmax, fEs] = grbm_energy(vf, W_test, vbias_test, hbias_test, sigmas_test);
+                        [cE, cEmin, cEmax, cEs] = grbm_energy(vf, R.W, R.vbias, R.hbias, R.sigmas);
+                        [dcE, dcEmin, dcEmax, dcEs] = grbm_energy(vd, R.W, R.vbias, R.hbias, R.sigmas);
+                    end
+                    % current
+                    curr_cost = sum(-dcEs);
+
+                    % search
+                    costs = zeros(length(cand_lrates), 1);
+                    for s=1:length(cand_lrates)
+                        cand_lrate = cand_lrates(s);
+
+                        vbias_test = R.vbias + cand_lrate * (momentum * vbias_grad_old' + (1-momentum) * vbias_grad');
+                        hbias_test = R.hbias + cand_lrate * (momentum * hbias_grad_old' + (1-momentum) * hbias_grad');
+                        W_test = R.W + cand_lrate * (momentum * W_grad_old + (1-momentum) * W_grad);
+                        if R.data.binary == 0
+                            if update_sigmas == 1
+                                logsigmas_test = logsigmas + cand_lrate * ((1-momentum) * sigma_grad + momentum * sigma_grad_old);
+                                logsigmas_test = max(epsilon_logsigma, min(logsigmas_ub, logsigmas_test));
+                                sigmas_test = sqrt(exp(logsigmas_test));
+                            else
+                                sigmas_test = R.sigmas;
+                            end
+                        end
+                        
+
+                        if R.data.binary
+                            [dE, dEmin, dEmax, dEs] = rbm_energy(vd, W_test, vbias_test, hbias_test);
+                            [fE, fEmin, fEmax, fEs] = rbm_energy(vf, W_test, vbias_test, hbias_test);
+                        else
+                            [dE, dEmin, dEmax, dEs] = grbm_energy(vd, W_test, vbias_test, hbias_test, sigmas_test);
+                            [fE, fEmin, fEmax, fEs] = grbm_energy(vf, W_test, vbias_test, hbias_test, sigmas_test);
+                        end
+
+                        now_cost = sum(-dEs - logsum(double(gather(-fEs + cEs))) + log(size(vf,1)));
+
+                        if use_gpu
+                            costs(s) = gather(now_cost);
+                        else
+                            costs(s) = now_cost;
+                        end
                     end
 
-                    now_cost = sum(-dEs - logsum(double(gather(-fEs + cEs))) + log(size(vf,1)));
-
-                    if use_gpu
-                        costs(s) = gather(now_cost);
-                    else
-                        costs(s) = now_cost;
-                    end
-                end
-
-                [chosen_cost chosen_index] = max(costs);
-                actual_lrate = max(lrate_lb, min(lrate_ub, cand_lrates(chosen_index)));
-            else
-                if R.learning.lrate0 > 0
-                    actual_lrate = R.learning.lrate / (1 + R.iterations.n_updates / R.learning.lrate0);
+                    [chosen_cost chosen_index] = max(costs);
+                    actual_lrate = max(lrate_lb, min(lrate_ub, cand_lrates(chosen_index)));
                 else
-                    actual_lrate = R.learning.lrate;
+                    if R.learning.lrate0 > 0
+                        actual_lrate = R.learning.lrate / (1 + R.iterations.n_updates / R.learning.lrate0);
+                    else
+                        actual_lrate = R.learning.lrate;
+                    end
+                end
+                actual_lrate0 = actual_lrate;
+            end
+
+            R.signals.lrates = [R.signals.lrates actual_lrate];
+
+            % update
+            vbias_grad_old = (1-momentum) * vbias_grad + momentum * vbias_grad_old;
+            hbias_grad_old = (1-momentum) * hbias_grad + momentum * hbias_grad_old;
+            W_grad_old = (1-momentum) * W_grad + momentum * W_grad_old;
+
+            R.vbias = R.vbias + actual_lrate * (vbias_grad_old' - weight_decay * R.vbias);
+            R.hbias = R.hbias + actual_lrate * (hbias_grad_old' - weight_decay * R.hbias);
+            R.W = R.W + actual_lrate * (W_grad_old - weight_decay * R.W);
+        
+            if R.data.binary == 0
+                if update_sigmas == 1
+                    sigma_grad_old = (1-momentum) * sigma_grad + momentum * sigma_grad_old;
+                    logsigmas = logsigmas + actual_lrate * (sigma_grad_old - weight_decay * logsigmas);
+                    logsigmas = max(epsilon_logsigma, min(logsigmas_ub, logsigmas));
+                    R.sigmas = sqrt(exp(logsigmas));
                 end
             end
-            actual_lrate0 = actual_lrate;
-        end
 
-        R.signals.lrates = [R.signals.lrates actual_lrate];
-
-        % update
-        vbias_grad_old = (1-momentum) * vbias_grad + momentum * vbias_grad_old;
-        hbias_grad_old = (1-momentum) * hbias_grad + momentum * hbias_grad_old;
-        W_grad_old = (1-momentum) * W_grad + momentum * W_grad_old;
-
-        R.vbias = R.vbias + actual_lrate * (vbias_grad_old' - weight_decay * R.vbias);
-        R.hbias = R.hbias + actual_lrate * (hbias_grad_old' - weight_decay * R.hbias);
-        R.W = R.W + actual_lrate * (W_grad_old - weight_decay * R.W);
-    
-        if R.data.binary == 0
-            if update_sigmas == 1
-                sigma_grad_old = (1-momentum) * sigma_grad + momentum * sigma_grad_old;
-                logsigmas = logsigmas + actual_lrate * (sigma_grad_old - weight_decay * logsigmas);
-                logsigmas = max(epsilon_logsigma, min(logsigmas_ub, logsigmas));
-                R.sigmas = sqrt(exp(logsigmas));
+            if R.fast.use
+                R.fast.W = (19/20) * R.fast.W + R.fast.lrate * W_grad_old;
+                R.fast.vbias = (19/20) * R.fast.vbias + R.fast.lrate * vbias_grad_old';
+                R.fast.hbias = (19/20) * R.fast.hbias + R.fast.lrate * hbias_grad_old';
             end
-        end
-
-        if R.fast.use
-            R.fast.W = (19/20) * R.fast.W + R.fast.lrate * W_grad_old;
-            R.fast.vbias = (19/20) * R.fast.vbias + R.fast.lrate * vbias_grad_old';
-            R.fast.hbias = (19/20) * R.fast.hbias + R.fast.lrate * hbias_grad_old';
         end
 
         if R.verbose == 1
@@ -504,6 +575,18 @@ for step=1:n_epochs
             R.fast.hbias = gather(R.fast.hbias);
             R.fast.sigmas = gather(R.fast.sigmas);
         end
+
+        if R.adadelta.use
+            R.adadelta.W = gather(R.adadelta.W);
+            R.adadelta.vbias = gather(R.adadelta.vbias);
+            R.adadelta.sigmas = gather(R.adadelta.sigmas);
+            R.adadelta.hbias = gather(R.adadelta.hbias);
+
+            R.adadelta.gW = gather(R.adadelta.gW);
+            R.adadelta.gvbias = gather(R.adadelta.gvbias);
+            R.adadelta.gsigmas = gather(R.adadelta.gsigmas);
+            R.adadelta.ghbias = gather(R.adadelta.ghbias);
+        end
     end
 
     if length(R.hook.per_epoch) > 1
@@ -541,6 +624,18 @@ if use_gpu > 0
         R.fast.vbias = gather(R.fast.vbias);
         R.fast.hbias = gather(R.fast.hbias);
         R.fast.sigmas = gather(R.fast.sigmas);
+    end
+
+    if R.adadelta.use
+        R.adadelta.W = gather(R.adadelta.W);
+        R.adadelta.vbias = gather(R.adadelta.vbias);
+        R.adadelta.sigmas = gather(R.adadelta.sigmas);
+        R.adadelta.hbias = gather(R.adadelta.hbias);
+
+        R.adadelta.gW = gather(R.adadelta.gW);
+        R.adadelta.gvbias = gather(R.adadelta.gvbias);
+        R.adadelta.gsigmas = gather(R.adadelta.gsigmas);
+        R.adadelta.ghbias = gather(R.adadelta.ghbias);
     end
 
     % clear

@@ -61,6 +61,19 @@ function [R] = default_rbm (n_visible, n_hidden);
     R.adaptive_lrate.lrate_ub = Inf;
     R.adaptive_lrate.lrate_lb = -Inf;
 
+    % adadelta
+    R.adadelta.use = 0;
+    R.adadelta.epsilon = 1e-6;
+    R.adadelta.momentum = 0.99;
+    R.adadelta.gW = zeros(n_visible, n_hidden);
+    R.adadelta.gvbias = zeros(n_visible, 1);
+    R.adadelta.ghbias = zeros(n_hidden, 1);
+    R.adadelta.gsigmas = zeros(n_visible, 1);
+    R.adadelta.W = zeros(n_visible, n_hidden);
+    R.adadelta.vbias = zeros(n_visible, 1);
+    R.adadelta.hbias = zeros(n_hidden, 1);
+    R.adadelta.sigmas = zeros(n_visible, 1);
+
     % enhanced gradient
     R.enhanced_grad.use = 1;
     R.enhanced_grad.bit_flipping = 0; % not even supported

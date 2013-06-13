@@ -5,6 +5,7 @@ WARNING: this is not my main code, and there is no warranty attached!
 = Restricted Boltzmann Machine & Deep Belief Networks =
  - Binary/Gaussian Visible Units + Binary Hidden Units
  - Enhanced Gradient, Adaptive Learning Rate
+ - Adadelta for RBM
  - Contrastive Divergence
  - (Fast) Persistent Contrastive Divergence
  - Parallel Tempering
