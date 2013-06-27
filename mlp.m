@@ -20,7 +20,7 @@ function [M] = mlp(M, patches, targets, valid_patches, valid_targets, valid_port
 if nargin < 3
     early_stop = 0;
     valid_patches = [];
-    valid_targest = [];
+    valid_targets = [];
     valid_portion = 0;
 else
     early_stop = 1;
