@@ -328,6 +328,8 @@ for step=1:n_epochs
                 mean_sigma_grad = mean(sigma_grad);
                 sigma_grad = mean_sigma_grad * ones(size(sigma_grad));
             end
+        else
+            sigma_grad = [];
         end
         hbias_grad = hbias0 - hbias1;
 
@@ -469,7 +471,7 @@ for step=1:n_epochs
                     actual_lrate = max(lrate_lb, min(lrate_ub, cand_lrates(chosen_index)));
                 else
                     if R.learning.lrate0 > 0
-                        actual_lrate = R.learning.lrate / (1 + R.iterations.n_updates / R.learning.lrate0);
+                        actual_lrate = R.learning.lrate / (1 + R.iteration.n_updates / R.learning.lrate0);
                     else
                         actual_lrate = R.learning.lrate;
                     end
@@ -557,7 +559,7 @@ for step=1:n_epochs
         end
         
         if R.debug.do_display == 1 && mod(R.iteration.n_updates, R.debug.display_interval) == 0
-            R.debug.display_function (R.debug.display_fid, R, v0, v1, h0, h1, W_grad, vbias_grad, hbias_grad);
+            R.debug.display_function (R.debug.display_fid, R, v0, v1, h0, h1, W_grad, vbias_grad, hbias_grad, sigma_grad);
             drawnow;
         end
     end

@@ -15,7 +15,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 %
-function [f] = visualize_rbm(f, R, v0, vf, W_grad, vbias_grad, hbias_grad, sigma_grad);
+function [f] = visualize_grbm(f, R, v0, vf, h0, hf, W_grad, vbias_grad, hbias_grad, sigma_grad);
 
     n_visible = floor(sqrt(size(R.W,1))).^2;
 
