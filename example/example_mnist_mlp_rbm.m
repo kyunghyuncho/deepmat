@@ -96,12 +96,9 @@ M.hook.per_epoch = {@save_intermediate, {'mlp_mnist.mat'}};
 
 M.learning.lrate = 1e-2;
 M.learning.lrate0 = 5000;
-%M.learning.momentum = 0.9;
-M.learning.weight_decay = 0.0001;
 M.learning.minibatch_sz = 128;
 
-M.adagrad.use = 1;
-M.adagrad.epsilon = 1e-8;
+M.adadelta.use = 1;
 
 M.noise.drop = 0;
 M.noise.level = 0;

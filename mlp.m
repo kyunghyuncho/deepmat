@@ -52,25 +52,33 @@ end
 
 if size(targets, 2) == 1 && M.output.binary
     % populate the target labels
-    n_classes = max(targets(:));
-    new_targets = zeros(n_samples, n_classes);
+    % more efficient way to populate the target labels thanks to vikrantt
+    C=unique(targets);
+    % new_targets = strcmp(repmat(targets,1,length(C)),repmat(C',length(targets),1));
+    new_targets = bsxfun(@eq,repmat(targets,1,length(C)),repmat(C',length(targets),1));
+%    n_classes = max(targets(:));
+%    new_targets = zeros(n_samples, n_classes);
 
-    for ti = 1:n_samples
-        new_targets(ti, targets(ti)) = 1; % well?
-    end
+%    for ti = 1:n_samples
+%        new_targets(ti, targets(ti)) = 1; % well?
+%    end
     
     targets = new_targets;
 end
 
 if size(valid_targets, 2) == 1 && M.output.binary
     % populate the target labels
-    n_classes = max(valid_targets(:));
-    n_valid_samples = size(valid_targets, 1);
-    new_targets = zeros(n_valid_samples, n_classes);
+    % more efficient way to populate the target labels thanks to vikrantt
+    C=unique(valid_targets);
+    % new_targets = strcmp(repmat(targets,1,length(C)),repmat(C',length(targets),1));
+    new_targets = bsxfun(@eq,repmat(valid_targets,1,length(C)),repmat(C',length(valid_targets),1));
+%    n_classes = max(valid_targets(:));
+%    n_valid_samples = size(valid_targets, 1);
+%    new_targets = zeros(n_valid_samples, n_classes);
 
-    for ti = 1:n_valid_samples
-        new_targets(ti, valid_targets(ti)) = 1; % well?
-    end
+%    for ti = 1:n_valid_samples
+%        new_targets(ti, valid_targets(ti)) = 1; % well?
+%    end
     
     valid_targets = new_targets;
 end
