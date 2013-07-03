@@ -198,7 +198,7 @@ for step=1:n_epochs
         end
 
         if M.noise.drop > 0
-            mask = binornd(1, M.noise.drop, size(v0));
+            mask = binornd(1, 1 - M.noise.drop, size(v0));
             v0 = v0 .* mask;
             clear mask;
         end
