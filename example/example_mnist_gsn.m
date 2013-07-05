@@ -21,7 +21,10 @@ G.data.binary = 1;
 G.learning.lrate = 1e-1;
 G.learning.lrate0 = 5000;
 G.learning.momentum = 0.5;
-G.adadelta.use = 0; % FIXME
+
+G.adadelta.use = 1; 
+G.adadelta.momentum = 0.995;
+G.adadelta.epsilon = 1e-8;
 
 G.learning.minibatch_sz = 64;
 

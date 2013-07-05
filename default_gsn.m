@@ -74,10 +74,10 @@ function [G] = default_gsn (layers)
         end
     end
 
-    % FIXME: adadelta doesn't work with GSN at the moment!
+    % adadelta
     G.adadelta.use = 0;
-    G.adadelta.momentum = 0.99;
-    G.adadelta.epsilon = 1e-6;
+    G.adadelta.momentum = 0.995;
+    G.adadelta.epsilon = 1e-8;
     G.adadelta.gW = cell(n_layers, 1);
     G.adadelta.gbiases = cell(n_layers, 1);
     G.adadelta.W = cell(n_layers, 1);

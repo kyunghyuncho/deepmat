@@ -2,6 +2,9 @@ deepmat
 ====
 WARNING: this is not my main code, and there is no warranty attached!
 
+= Generative Stochastic Network =
+ - A simple implementation of GSN according to (Bengio et al., 2013)
+
 = Restricted Boltzmann Machine & Deep Belief Networks =
  - Binary/Gaussian Visible Units + Binary Hidden Units
  - Enhanced Gradient, Adaptive Learning Rate
