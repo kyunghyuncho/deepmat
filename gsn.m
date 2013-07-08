@@ -130,13 +130,13 @@ for step=1:n_epochs
         v0_clean = v0;
 
         % forward pass
-        h0 = cell(n_layers, n_walkback * 2 - 1);
-        occupied = zeros(n_layers, n_walkback * 2 - 1);
+        h0 = cell(n_layers, n_walkback * 2 + 1);
+        occupied = zeros(n_layers, n_walkback * 2 + 1);
 
         h0{1,1} = v0;
         occupied(1,1) = 1;
 
-        for wi = 1:(n_walkback * 2 - 1)
+        for wi = 1:(n_walkback * 2 + 1)
             for l = 1:min(wi,n_layers)
                 if sum(occupied(1, 2:end)) == n_walkback
                     break;
@@ -248,13 +248,13 @@ for step=1:n_epochs
         end
 
         % error backprop
-        delta = cell(n_layers, n_walkback * 2 - 1);
+        delta = cell(n_layers, n_walkback * 2 + 1);
 
         delta{1, end} = h0{1, end} - v0_clean;
         
         rerr = mean(sum(delta{1, end}.^2,2));
 
-        for wi = 2:(n_walkback * 2 - 1)
+        for wi = 2:(n_walkback * 2 + 1)
             if occupied(1, wi) 
                 rerr = rerr + mean(sum((h0{1, wi} - v0_clean).^2,2));
             end
@@ -271,7 +271,7 @@ for step=1:n_epochs
 
         biases_grad{1} = mean(delta{1, end}, 1);
 
-        for wi = (n_walkback * 2 - 1):-1:1
+        for wi = (n_walkback * 2 + 1):-1:1
             for l = 1:min(wi,n_layers)
                 if occupied(l, wi) == 0
                     continue;
@@ -279,7 +279,7 @@ for step=1:n_epochs
 
                 delta{l, wi} = zeros(mb_sz, G.structure.layers(l));
 
-                if wi < (n_walkback * 2 - 1)
+                if wi < (n_walkback * 2 + 1)
                     if l > 1 && occupied(l-1,wi+1) == 1
                         delta{l, wi} = delta{l, wi} + delta{l-1,wi+1} * G.W{l-1};
                     end
