@@ -18,7 +18,7 @@
 function [G] = gsn(G, patches, n_walkback, valid_patches, valid_portion);
 
 if nargin < 3
-    n_walkback = 5;
+    n_walkback = G.structure.n_layers * 2;
 end
 
 valid_err = 0;
@@ -94,12 +94,13 @@ actual_lrate0 = actual_lrate;
 
 rerr_ma = 0;
 
-try
-    use_gpu = gpuDeviceCount;
-catch errgpu
-    use_gpu = false;
-    disp(['Could not use CUDA. Error: ' errgpu.identifier])
-end
+% try
+%     use_gpu = gpuDeviceCount;
+% catch errgpu
+%     use_gpu = false;
+%     disp(['Could not use CUDA. Error: ' errgpu.identifier])
+% end
+use_gpu = 0;
 
 % figure;
 
@@ -226,19 +227,6 @@ for step=1:n_epochs
             end
         end
         
-%         if mod(G.iteration.n_updates, 1) == 0
-%             subplot(1,3,1);
-%             visualize(h0{1,end}', 1);
-%             drawnow;
-%             subplot(1,3,2);
-%             visualize(h0{1,1}', 1);
-%             drawnow;
-%             subplot(1,3,3);
-%             visualize(v0_clean', 1);
-%             drawnow;
-%             pause
-%         end
-% 
         % reset gradients
         for l = 1:n_layers
             biases_grad{l} = 0 * biases_grad{l};
@@ -250,10 +238,7 @@ for step=1:n_epochs
         % error backprop
         delta = cell(n_layers, n_walkback * 2 + 1);
 
-        delta{1, end} = h0{1, end} - v0_clean;
-        
-        rerr = mean(sum(delta{1, end}.^2,2));
-
+        rerr = 0;
         for wi = 2:(n_walkback * 2 + 1)
             if occupied(1, wi) 
                 rerr = rerr + mean(sum((h0{1, wi} - v0_clean).^2,2));
@@ -268,8 +253,6 @@ for step=1:n_epochs
         rerr_ma = rerr * 0.1 + rerr_ma * 0.9;
 
         G.signals.recon_errors = [G.signals.recon_errors rerr];
-
-        biases_grad{1} = mean(delta{1, end}, 1);
 
         for wi = (n_walkback * 2 + 1):-1:1
             for l = 1:min(wi,n_layers)
@@ -292,7 +275,7 @@ for step=1:n_epochs
                     if G.data.binary
                         delta{l, wi} = delta{l, wi} .* dsigmoid(h0{l, wi});
                     end
-
+                    
                     delta{l, wi} = delta{l, wi} + (h0{l, wi} - v0_clean);
                 else
                     delta{l, wi} = delta{l, wi} .* dsigmoid(h0{l, wi}, G.hidden.use_tanh);
