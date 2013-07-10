@@ -20,16 +20,16 @@ G.data.binary = 1;
 
 G.learning.lrate = 1e-1;
 G.learning.lrate0 = 5000;
-G.learning.momentum = 0.5;
+G.learning.momentum = 0;
 
 G.adadelta.use = 1; 
-G.adadelta.momentum = 0.995;
+G.adadelta.momentum = 0.95;
 G.adadelta.epsilon = 1e-8;
 
 G.learning.minibatch_sz = 64;
 
 G.hidden.use_tanh = 1;
-G.hidden.noise_level = 2;
+G.hidden.noise_level = .2;
 
 G.hidden.add_noise = zeros(n_layers, 1);
 G.hidden.add_noise(end) = 1;
