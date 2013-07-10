@@ -272,7 +272,7 @@ for step=1:n_epochs
                 end
                 
                 if l == 1 
-                    if G.data.binary
+                    if G.data.binary && wi < (n_walkback * 2 + 1)
                         delta{l, wi} = delta{l, wi} .* dsigmoid(h0{l, wi});
                     end
                     
