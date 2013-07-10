@@ -132,9 +132,11 @@ for step=1:n_epochs
 
         % forward pass
         h0 = cell(n_layers, n_walkback * 2 + 1);
+        v1clean = cell(1, n_walkback * 2 + 1);
         occupied = zeros(n_layers, n_walkback * 2 + 1);
 
         h0{1,1} = v0;
+        v1clean{1,1} = v0;
         occupied(1,1) = 1;
 
         for wi = 1:(n_walkback * 2 + 1)
@@ -206,6 +208,7 @@ for step=1:n_epochs
                     if G.data.binary
                         h0{l, wi} = sigmoid(h0{l, wi});
                     end
+                    v1clean{l, wi} = h0{l, wi};
                 else
                     h0{l, wi} = sigmoid(h0{l, wi}, G.hidden.use_tanh);
                 end
@@ -241,7 +244,7 @@ for step=1:n_epochs
         rerr = 0;
         for wi = 2:(n_walkback * 2 + 1)
             if occupied(1, wi) 
-                rerr = rerr + mean(sum((h0{1, wi} - v0_clean).^2,2));
+                rerr = rerr + mean(sum((v1clean{1, wi} - v0_clean).^2,2));
             end
         end
 
@@ -276,7 +279,8 @@ for step=1:n_epochs
                         delta{l, wi} = delta{l, wi} .* dsigmoid(h0{l, wi});
                     end
                     
-                    delta{l, wi} = delta{l, wi} + (h0{l, wi} - v0_clean);
+                    delta{l, wi} = delta{l, wi} + (v1clean{l, wi} - v0_clean);
+                    %delta{l, wi} = delta{l, wi} + (h0{l, wi} - v0_clean);
                 else
                     delta{l, wi} = delta{l, wi} .* dsigmoid(h0{l, wi}, G.hidden.use_tanh);
                 end
@@ -374,7 +378,7 @@ for step=1:n_epochs
         end
 
         if use_gpu > 0
-            clear v0 h0 h0d h0e v0_clean vr hr deltae deltad 
+            clear v0 h0 h0d h0e v0_clean vr hr deltae deltad v1clean
         end
 
         if early_stop
