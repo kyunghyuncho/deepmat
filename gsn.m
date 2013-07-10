@@ -213,16 +213,17 @@ for step=1:n_epochs
                     h0{l, wi} = sigmoid(h0{l, wi}, G.hidden.use_tanh);
                 end
                 
-                % post-sigmoid noise
-                if l > 1
-                    if G.hidden.add_noise(l)
-                        if use_gpu
-                            h0{l, wi} = h0{l, wi} + G.hidden.noise_level * parallel.gpu.GPUArray.randn(mb_sz, G.structure.layers(l));
-                        else
-                            h0{l, wi} = h0{l, wi} + G.hidden.noise_level * randn(mb_sz, G.structure.layers(l));
-                        end
-                    end
-                end
+                % FIXME: unable to train a GSN with post-sigmoid noise.
+%                % post-sigmoid noise
+%                if l > 1
+%                    if G.hidden.add_noise(l)
+%                        if use_gpu
+%                            h0{l, wi} = h0{l, wi} + G.hidden.noise_level * parallel.gpu.GPUArray.randn(mb_sz, G.structure.layers(l));
+%                        else
+%                            h0{l, wi} = h0{l, wi} + G.hidden.noise_level * randn(mb_sz, G.structure.layers(l));
+%                        end
+%                    end
+%                end
             end
 
             if sum(occupied(1, 2:end)) == n_walkback

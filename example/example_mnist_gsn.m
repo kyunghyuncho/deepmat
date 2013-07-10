@@ -29,7 +29,7 @@ G.adadelta.epsilon = 1e-8;
 G.learning.minibatch_sz = 64;
 
 G.hidden.use_tanh = 1;
-G.hidden.noise_level = .2;
+G.hidden.noise_level = 2;
 
 G.hidden.add_noise = zeros(n_layers, 1);
 G.hidden.add_noise(end) = 1;
