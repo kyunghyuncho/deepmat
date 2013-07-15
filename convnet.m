@@ -582,7 +582,11 @@ for step=1:n_epochs
         if early_stop && mod(C.iteration.n_updates, valid_interval) == 0
             n_valid = size(valid_patches, 1);
             rndidx = randperm(n_valid);
-            v0valid = gpuArray(single(valid_patches(rndidx(1:round(n_valid * valid_portion)),:)));
+            if use_gpu
+                v0valid = gpuArray(single(valid_patches(rndidx(1:round(n_valid * valid_portion)),:)));
+            else
+                v0valid = valid_patches(rndidx(1:round(n_valid * valid_portion)),:);
+            end
 
             if C.output.binary
                 vr = convnet_classify(C, v0valid, 1);
