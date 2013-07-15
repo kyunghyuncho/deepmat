@@ -27,7 +27,8 @@ function [C] = default_convnet (size_in, channel_in, full_layers, conv_layers, p
     layers(1) = size_in * size_in * channel_in;
     for l = 1:n_conv
         cin = conv_layers(l, 2);
-        szin = ceil((floor((szin - 2 * strides(l)) / strides(l)) - 1) / poolratios(l));
+        szout_prepool = floor((szin - sqrt(conv_layers(l, 1))) / strides(l) + 1);
+        szin = ceil(szout_prepool / poolratios(l));
         layers(l+1) = cin * szin * szin;
     end
     for l = 1:n_full
