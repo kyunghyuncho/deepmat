@@ -38,13 +38,18 @@ if nargin < 7
     use_cvp = 1;
 end
 
-%try
-%    use_gpu = gpuDeviceCount;
-%catch errgpu
-%    use_gpu = false;
-%    disp(['Could not use CUDA. Error: ' errgpu.identifier])
-%end
-use_gpu = 0;
+matrel = version('-release');
+if str2num(matrel(1:4)) >= 2013
+    % gpu support for convn() was added in 2013a
+    try
+        use_gpu = gpuDeviceCount;
+    catch errgpu
+        use_gpu = false;
+        disp(['Could not use CUDA. Error: ' errgpu.identifier])
+    end
+else
+    use_gpu = 0;
+end
 
 actual_lrate = C.learning.lrate;
 
@@ -114,10 +119,10 @@ for l = 1:n_conv
     end
 
     if use_gpu
-        cbiases_grad{l} = parallel.gpu.GPUArray.zeros(conv_layers(l,2), 1);
-        cbiases_grad_old{l} = parallel.gpu.GPUArray.zeros(conv_layers(l,2), 1);
-        cW_grad{l} = parallel.gpu.GPUArray.zeros(conv_layers(l,1)*cin, conv_layers(l,2));
-        cW_grad_old{l} = parallel.gpu.GPUArray.zeros(conv_layers(l,1)*cin, conv_layers(l,2));
+        cbiases_grad{l} = gpuArray.zeros(conv_layers(l,2), 1);
+        cbiases_grad_old{l} = gpuArray.zeros(conv_layers(l,2), 1);
+        cW_grad{l} = gpuArray.zeros(conv_layers(l,1)*cin, conv_layers(l,2));
+        cW_grad_old{l} = gpuArray.zeros(conv_layers(l,1)*cin, conv_layers(l,2));
     else
         cbiases_grad{l} = zeros(conv_layers(l,2), 1);
         cbiases_grad_old{l} = zeros(conv_layers(l,2), 1);
@@ -132,11 +137,11 @@ W_grad = cell(n_full, 1);
 biases_grad = cell(n_full+1, 1);
 for l = 1:(n_full+1)
     if use_gpu
-        biases_grad{l} = parallel.gpu.GPUArray.zeros(layers(n_conv+l), 1);
-        biases_grad_old{l} = parallel.gpu.GPUArray.zeros(layers(n_conv+l), 1);
+        biases_grad{l} = gpuArray.zeros(layers(n_conv+l), 1);
+        biases_grad_old{l} = gpuArray.zeros(layers(n_conv+l), 1);
         if l < n_full + 1
-            W_grad{l} = parallel.gpu.GPUArray.zeros(layers(n_conv+l),layers(n_conv+l+1));
-            W_grad_old{l} = parallel.gpu.GPUArray.zeros(layers(n_conv+l),layers(n_conv+l+1));
+            W_grad{l} = gpuArray.zeros(layers(n_conv+l),layers(n_conv+l+1));
+            W_grad_old{l} = gpuArray.zeros(layers(n_conv+l),layers(n_conv+l+1));
         end
     else
         biases_grad{l} = zeros(layers(n_conv+l), 1);
@@ -242,9 +247,9 @@ for step=1:n_epochs
             szout_prepool = floor((szin - sqrt(fsz)) / strides(l) + 1);
             szout = ceil(szout_prepool / poolratios(l));
             if use_gpu
-                respfull = parallel.gpu.GPUArray.zeros(mb_sz, szout, szout, n_filters);
-                idxfull = parallel.gpu.GPUArray.zeros(mb_sz, szout_prepool, szout_prepool, n_filters);
-                h0_conv{l, 1} = parallel.gpu.GPUArray.zeros(mb_sz, szout_prepool, szout_prepool, n_filters);
+                respfull = gpuArray.zeros(mb_sz, szout, szout, n_filters);
+                idxfull = gpuArray.zeros(mb_sz, szout_prepool, szout_prepool, n_filters);
+                h0_conv{l, 1} = gpuArray.zeros(mb_sz, szout_prepool, szout_prepool, n_filters);
                 h0_conv{l, 2} = respfull;
                 h0_conv{l, 3} = idxfull;
             else
@@ -398,7 +403,7 @@ for step=1:n_epochs
 
             if l > 1
                 if use_gpu
-                    dconv_next = parallel.gpu.GPUArray.zeros(size(lower));
+                    dconv_next = gpuArray.zeros(size(lower));
                 else
                     dconv_next = zeros(size(lower));
                 end
@@ -420,7 +425,7 @@ for step=1:n_epochs
             lowerl = repmat(lower, [1, 1, 1, 1, n_filters]);
 
             if use_gpu
-                wgs = parallel.gpu.GPUArray.zeros(1, size(cW_grad{l},1), size(cW_grad{l},2), size(prepool,2) * size(prepool,3));
+                wgs = gpuArray.zeros(1, size(cW_grad{l},1), size(cW_grad{l},2), size(prepool,2) * size(prepool,3));
             else
                 wgs = zeros(1, size(cW_grad{l},1), size(cW_grad{l},2), size(prepool,2) * size(prepool,3));
             end
