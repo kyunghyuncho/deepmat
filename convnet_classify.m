@@ -29,7 +29,7 @@ posterior = x0;
 full_layers = C.structure.full_layers;
 conv_layers = C.structure.conv_layers;
 n_full = length(full_layers);
-n_conv = length(conv_layers);
+n_conv = size(conv_layers,1);
 
 strides = C.structure.strides;
 poolratios = C.structure.poolratios;
