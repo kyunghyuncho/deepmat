@@ -5,6 +5,11 @@ WARNING: this is not my main code, and there is no warranty attached!
 = Generative Stochastic Network =
  - A simple implementation of GSN according to (Bengio et al., 2013)
 
+= Convolutional Neural Network =
+ - A naive implementation (purely using Matlab)
+ - Max pooling implementation from Jonathan
+ - Not for serious use!
+
 = Restricted Boltzmann Machine & Deep Belief Networks =
  - Binary/Gaussian Visible Units + Binary Hidden Units
  - Enhanced Gradient, Adaptive Learning Rate
