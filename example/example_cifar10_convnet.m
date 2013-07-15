@@ -2,6 +2,8 @@
 addpath('..');
 
 % load CIFAR-10
+% get cifar_10.mat from http://users.ics.aalto.fi/kcho/cifar_10.mat
+% This is a single-file version of CIFAR-10 dataset by Alex Krizhevsky
 load cifar_10.mat;
 
 % shuffle the training data
@@ -22,9 +24,9 @@ X_labels = X_labels(perm_idx(1:n_train));
 size_in = 32; % supports a squre image
 channel_in = 3; % grayscale image
 full_layers = [1000, 10];
-conv_layers = [6*6, 32; 4*4, 32]; % 32 8x8 filters and 32 4x4 filters
-poolratios = [2, 2]; % 4x4 pooling
-strides = [2, 1]; % every second pixel
+conv_layers = [6*6, 32]; % 32 6x6 filters 
+poolratios = [2]; % 2x2 max pooling
+strides = [2]; % every second pixel
 
 % construct convnet
 C = default_convnet (size_in, channel_in, full_layers, conv_layers, poolratios, strides);
