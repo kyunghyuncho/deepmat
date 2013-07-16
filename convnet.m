@@ -459,12 +459,14 @@ for step=1:n_epochs
 
             cW_grad{l} = reshape(sum(wgs,4), size(cW_grad{l}));
 
-            clear postpool prepool rfilter rcW lowerl lower dconv;
+            clear postpool prepool rfilter rcW lowerl dconv;
 
             if l > 1
                 dconv = dconv_next;
-                dconv = dconv .* dsigmoid(dconv, C.hidden.use_tanh);
+                dconv = dconv .* dsigmoid(lower, C.hidden.use_tanh);
             end
+
+            clear lower;
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
