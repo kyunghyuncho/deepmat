@@ -443,11 +443,14 @@ for step=1:n_epochs
 
                     if l > 1
                         % backprop
+                        res = zeros(length(size(rfilter)), 1);
+                        res(1) = size(acts, 1);
+                        res(end) = size(acts, 3);
                         dconv_next(:,((ai-1)*strides(l)+1):((ai-1)*strides(l)+sqrt(fsz)), ...
                             ((aj-1)*strides(l)+1):((aj-1)*strides(l)+sqrt(fsz)), :) = ...
                         dconv_next(:,((ai-1)*strides(l)+1):((ai-1)*strides(l)+sqrt(fsz)), ...
                             ((aj-1)*strides(l)+1):((aj-1)*strides(l)+sqrt(fsz)), :) + ...
-                            sum(bsxfun(@times, rfilter, reshape(acts, [size(acts, 1), 1, 1, size(acts,3)])), 5);
+                            sum(bsxfun(@times, rfilter, res, 5);
                     end
 
                     clear inblock acts;
