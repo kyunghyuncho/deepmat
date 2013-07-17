@@ -1,4 +1,4 @@
-function [Z, Wsep, Wmix, m] = zca(X, portion)
+function [Z, Wsep, Wmix, m, U, S, V] = zca(X, portion)
 
 if nargin < 2
     portion = 1;
@@ -10,9 +10,12 @@ X = X(rndidx(1:round(size(X,1) * portion)), :);
 
 m = mean(X, 1);
 Xc = bsxfun(@minus, X, m);
-[U, S, V] = svd(Xc, 0);
-Us = std(U, [], 1);
-Wsep = V * inv(S .* diag(Us));
+
+sigma = Xc' * Xc / size(Xc, 1);
+
+[U, S, V] = svd(sigma, 0);
+
+Wsep = V / sqrt(S+1e-12);
 Wmix = V';
 Z = bsxfun(@minus, X_orig, m) * Wsep * Wmix;
 
