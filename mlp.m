@@ -204,6 +204,7 @@ for step=1:n_epochs
         end
 
         h0 = cell(n_layers, 1);
+        h0mask = cell(n_layers, 1);
         h0{1} = v0;
 
         for l = 2:n_layers
@@ -214,9 +215,8 @@ for step=1:n_epochs
             end
 
             if M.dropout.use && l < n_layers
-                h0mask = single(bsxfun(@minus, rand(size(h0{l})), M.dropout.probs{l}') < 0);
-                h0{l} = h0mask .* h0{l};
-                clear h0mask;
+                h0mask{l} = single(bsxfun(@minus, rand(size(h0{l})), M.dropout.probs{l}') < 0);
+                h0{l} = h0mask{l} .* h0{l};
             end
 
             if l == n_layers && M.output.binary
@@ -262,11 +262,17 @@ for step=1:n_epochs
                 delta{l} = delta{l} .* dsigmoid(h0{l}, M.hidden.use_tanh);
             end
 
+            if M.dropout.use && l < n_layers && l > 1
+                delta{l} = delta{l} .* h0mask{l};
+            end
+
             if l > 1
                 biases_grad{l} = biases_grad{l} + mean(delta{l}, 1);
             end
             W_grad{l} = W_grad{l} + (h0{l}' * delta{l+1}) / (size(v0, 1));
         end
+
+        clear h0mask;
 
         % learning rate
         if M.adagrad.use

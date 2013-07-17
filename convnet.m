@@ -310,12 +310,12 @@ for step=1:n_epochs
 
         % stretch
         h0_full{1} = reshape(repost, [mb_sz C.structure.layers(n_conv+1)]);
+        h0mask = cell(n_full+1, 1);
 
         for l = 2:n_full+1
             if C.dropout.use && l < n_full + 1
-                h0mask = single(rand(size(h0_full{l-1})) - C.dropout.prob < 0);
-                h0_full{l-1} = h0mask .* h0_full{l-1};
-                clear h0mask;
+                h0mask{l} = single(rand(size(h0_full{l-1})) - C.dropout.prob < 0);
+                h0_full{l-1} = h0mask{l} .* h0_full{l-1};
             end
 
             h0_full{l} = bsxfun(@plus, h0_full{l-1} * C.W{l-1}, C.biases{l}');
@@ -375,8 +375,13 @@ for step=1:n_epochs
 
                 dfull = dfull * C.W{l-1}';
                 dfull = dfull .* dsigmoid(h0_full{l-1}, C.hidden.use_tanh);
+                if C.dropout.use && l > 2
+                    dfull = dfull .* h0mask{l-1};
+                end
             end
         end
+
+        clear h0mask;
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % convolutional layers, next
