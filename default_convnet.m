@@ -87,6 +87,9 @@ function [C] = default_convnet (size_in, channel_in, full_layers, conv_layers, p
     C.noise.drop = 0.1;
     C.noise.level = 0.1;
 
+    C.lcn.use = 0;
+    C.lcn.neigh = 4;
+
     % initializations
     C.cW = cell(n_conv, 1);
     C.cbiases = cell(n_conv, 1);

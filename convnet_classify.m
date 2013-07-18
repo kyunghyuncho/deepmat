@@ -41,6 +41,11 @@ szin = C.structure.size_in;
 
 repost = reshape(posterior, [mb_sz, szin, szin, cin]);
 
+if C.lcn.use
+    subwindow = fspecial('gaussian', C.lcn.neigh);
+    subwindow_sum = ones(C.lcn.neigh);
+end
+
 for l = 1:n_conv
     fsz = length(C.cW{l}(:,1)) / cin;
     n_filters = size(C.cW{l}, 2);
@@ -62,6 +67,14 @@ for l = 1:n_conv
         % nonlinearity
         resp = sigmoid(resp, C.hidden.use_tanh);
         
+        if C.lcn.use 
+            subsum = convn(resp, reshape(subwindow_sum, [1, C.lcn.neigh, C.lcn.neigh, 1]), 'same');
+            resp = resp - subsum / C.lcn.neigh^2;
+            resp2 = resp.^2;
+            subsum = convn(resp2, reshape(subwindow_sum, [1, C.lcn.neigh, C.lcn.neigh, 1]), 'same');
+            resp = resp ./(sqrt(subsum + 1e-12) / C.lcn.neigh);
+        end
+
         if C.structure.poolratios(l) > 1
             % pooling
             switch C.pooling

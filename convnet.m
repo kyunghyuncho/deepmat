@@ -171,7 +171,7 @@ end
 
 if do_normalize_std ==1
     % make it unit-variance
-    patches_std = std(patches, [], 1);
+    patches_std = max(std(patches, [], 1), 1e-8);
     patches = bsxfun(@rdivide, patches, patches_std);
     if early_stop
         valid_patches = bsxfun(@rdivide, valid_patches, patches_std);
@@ -186,6 +186,11 @@ if C.debug.do_display == 1
 end
 
 rerr_ma = 0;
+
+if C.lcn.use
+    subwindow = fspecial('gaussian', C.lcn.neigh);
+    subwindow_sum = ones(C.lcn.neigh);
+end
 
 for step=1:n_epochs
     if C.verbose
@@ -273,6 +278,14 @@ for step=1:n_epochs
                 
                 % nonlinearity
                 resp = sigmoid(resp, C.hidden.use_tanh);
+                if C.lcn.use 
+                    subsum = convn(resp, reshape(subwindow_sum, [1, C.lcn.neigh, C.lcn.neigh, 1]), 'same');
+                    resp = resp - subsum / C.lcn.neigh^2;
+                    resp2 = resp.^2;
+                    subsum = convn(resp2, reshape(subwindow_sum, [1, C.lcn.neigh, C.lcn.neigh, 1]), 'same');
+                    resp = resp ./(sqrt(subsum + 1e-12) / C.lcn.neigh);
+                    h0_conv{l, 4}(:, :, :, fidx) = 1./(sqrt(subsum + 1e-12) / C.lcn.neigh);
+                end
 
                 %% save before max
                 h0_conv{l, 1}(:,:,:,fidx) = resp;
@@ -468,6 +481,9 @@ for step=1:n_epochs
 
             if l > 1
                 dconv = dconv_next;
+                if C.lcn.use
+                    dconv = dconv .* h0_conv{l-1, 4};
+                end
                 dconv = dconv .* dsigmoid(lower, C.hidden.use_tanh);
             end
 
@@ -640,7 +656,8 @@ for step=1:n_epochs
                 M_best = pull_from_gpu (M_best);
             else
                 prev_err = valid_err;
-                valid_err = 0.99 * valid_err + 0.01 * rerr;
+                mom = power(0.9, valid_interval);
+                valid_err = mom * valid_err + (1 - mom) * rerr;
 
                 if C.verbose == 1
                     fprintf(2, 'valid err = %f\n', valid_err);

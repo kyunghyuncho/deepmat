@@ -23,10 +23,11 @@ X_labels = X_labels(perm_idx(1:n_train));
 % structures
 size_in = 32; % supports a squre image
 channel_in = 3; % grayscale image
-full_layers = [1000, 10];
-conv_layers = [6*6, 32]; % 32 6x6 filters 
-poolratios = [2]; % 2x2 max pooling
-strides = [2]; % every second pixel
+full_layers = [2000, 2000, 10];
+conv_layers = [6*6, 128]; % 32 8x8 filters
+poolratios = [2]; % 2x2 pooling
+strides = [3]; % every second pixel
+
 
 % construct convnet
 C = default_convnet (size_in, channel_in, full_layers, conv_layers, poolratios, strides);
@@ -36,13 +37,13 @@ C.learning.lrate0 = 5000;
 C.learning.momentum = 0;
 
 C.adadelta.use = 1;
-C.adadelta.momentum = 0.99;
+C.adadelta.momentum = 0.95;
 C.adadelta.epsilon = 1e-8;
 
-C.do_normalize = 0;
-C.do_normalize_std = 0;
+C.do_normalize = 1;
+C.do_normalize_std = 1;
 
-C.dropout.use = 0;
+C.dropout.use = 1;
 
 C.learning.minibatch_sz = 32;
 
@@ -51,8 +52,12 @@ C.hidden.use_tanh = 2;
 C.noise.drop = 0;
 C.noise.level = 0;
 
+C.lcn.use = 1;
+C.lcn.neigh = 4;
+
 % max. 100 epochs
 C.iteration.n_epochs = 150;
+C.valid_min_epochs = 50;
 
 % set the stopping criterion
 C.stop.criterion = 0;
