@@ -7,7 +7,7 @@ WARNING: this is not my main code, and there is no warranty attached!
 
 = Convolutional Neural Network =
  - A naive implementation (purely using Matlab)
- - Max pooling implementation from Jonathan
+ - Pooling: max (Jonathan Masci's code) and average
  - Not for serious use!
 
 = Restricted Boltzmann Machine & Deep Belief Networks =
