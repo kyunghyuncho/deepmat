@@ -77,11 +77,11 @@ for l = 1:n_conv
 
         if C.structure.poolratios(l) > 1
             % pooling
-            switch C.pooling
+            switch C.pooling(l)
                 case 0
                     resp = convnet_maxpool (resp, C.structure.poolratios(l));
                 case 1
-                    error('NOT SUPPORTED');
+                    resp = convnet_avgpool (resp, C.structure.poolratios(l));
                 case 2
                     error('NOT SUPPORTED');
             end
@@ -99,11 +99,11 @@ end
 posterior = reshape(repost, [mb_sz C.structure.layers(n_conv+1)]);
 
 for l = 2:n_full+1
-    if C.dropout.use && l < n_full + 1
-        posterior = bsxfun(@plus, posterior * (1 - C.dropout.prob) *  C.W{l-1}, C.biases{l}');
-    else
-        posterior = bsxfun(@plus, posterior * C.W{l-1}, C.biases{l}');
+    if C.dropout.use && l > 2
+        posterior = (1 - C.dropout.prob) * posterior;
     end
+
+    posterior = bsxfun(@plus, posterior * C.W{l-1}, C.biases{l}');
 
     if l < n_full + 1
         posterior = sigmoid(posterior, C.hidden.use_tanh);

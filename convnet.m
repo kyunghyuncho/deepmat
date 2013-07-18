@@ -292,11 +292,11 @@ for step=1:n_epochs
 
                 % pooling
                 if C.structure.poolratios(l) > 1
-                    switch C.pooling
+                    switch C.pooling(l)
                     case 0
                         [resp, respidx] = convnet_maxpool (resp, C.structure.poolratios(l));
                     case 1
-                        error('NOT SUPPORTED');
+                        [resp, respidx] = convnet_avgpool (resp, C.structure.poolratios(l));
                     case 2
                         error('NOT SUPPORTED');
                     end
@@ -326,9 +326,9 @@ for step=1:n_epochs
         h0mask = cell(n_full+1, 1);
 
         for l = 2:n_full+1
-            if C.dropout.use && l < n_full + 1
-                h0mask{l} = single(rand(size(h0_full{l-1})) - C.dropout.prob < 0);
-                h0_full{l-1} = h0mask{l} .* h0_full{l-1};
+            if C.dropout.use && l > 2
+                h0mask{l-1} = single(rand(size(h0_full{l-1})) - C.dropout.prob < 0);
+                h0_full{l-1} = h0mask{l-1} .* h0_full{l-1};
             end
 
             h0_full{l} = bsxfun(@plus, h0_full{l-1} * C.W{l-1}, C.biases{l}');
@@ -380,7 +380,7 @@ for step=1:n_epochs
 
         % backprop
         % fully connected layers, first
-        dfull = h0_full{end} - targets(cvp == mb, :);% - h0_full{end};
+        dfull = h0_full{end} - targets(cvp == mb, :);
         for l = n_full+1:-1:1
             biases_grad{l} = biases_grad{l} + mean(dfull, 1)';
             if l > 1
@@ -483,6 +483,9 @@ for step=1:n_epochs
                 dconv = dconv_next;
                 if C.lcn.use
                     dconv = dconv .* h0_conv{l-1, 4};
+                end
+                if C.pooling(l-1) == 1 % average pooling
+                    dconv = dconv * (1 / square(C.structure.poolratios(l-1)));
                 end
                 dconv = dconv .* dsigmoid(lower, C.hidden.use_tanh);
             end

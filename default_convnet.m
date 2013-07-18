@@ -55,9 +55,9 @@ function [C] = default_convnet (size_in, channel_in, full_layers, conv_layers, p
 
     % pooling
     % 0 - max
-    % 1 - TODO: stochastic
-    % 2 - TODO: average
-    C.pooling = 0;
+    % 1 - average
+    % 2 - TODO: stochastic
+    C.pooling = zeros(n_conv, 1);
 
     % learning parameters
     C.learning.lrate = 1e-3;
@@ -87,6 +87,7 @@ function [C] = default_convnet (size_in, channel_in, full_layers, conv_layers, p
     C.noise.drop = 0.1;
     C.noise.level = 0.1;
 
+    % local contrast normalization
     C.lcn.use = 0;
     C.lcn.neigh = 4;
 
@@ -100,10 +101,14 @@ function [C] = default_convnet (size_in, channel_in, full_layers, conv_layers, p
             cin = conv_layers(l-1,2);
         end
 
-        C.cbiases{l} = zeros(conv_layers(l,2), 1);
+        if C.conv.use_tanh == 2
+            C.cbiases{l} = ones(conv_layers(l,2), 1);
+        else
+            C.cbiases{l} = zeros(conv_layers(l,2), 1);
+        end
         if l < n_layers
-            C.cW{l} = 2 * sqrt(6)/sqrt(conv_layers(l,1)+conv_layers(l,2)) * (rand(conv_layers(l,1)*cin, conv_layers(l,2)) - 0.5);
-            %C.cW{l} = 0.01 * (rand(conv_layers(l,1)*cin, conv_layers(l,2)) - 0.5);
+            %C.cW{l} = 2 * sqrt(6)/sqrt(conv_layers(l,1)+conv_layers(l,2)) * (rand(conv_layers(l,1)*cin, conv_layers(l,2)) - 0.5);
+            C.cW{l} = 0.0001 * (rand(conv_layers(l,1)*cin, conv_layers(l,2)) - 0.5);
         end
     end
     C.W = cell(n_full, 1);

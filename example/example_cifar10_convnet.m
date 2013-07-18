@@ -24,17 +24,20 @@ X_labels = X_labels(perm_idx(1:n_train));
 size_in = 32; % supports a squre image
 channel_in = 3; % grayscale image
 full_layers = [2000, 2000, 10];
-conv_layers = [6*6, 128]; % 32 8x8 filters
-poolratios = [2]; % 2x2 pooling
-strides = [3]; % every second pixel
-
+conv_layers = [5*5, 32, 5*5, 32]; % 32 5x5 filters x 2 layers
+poolratios = [2,2]; % 2x2 pooling
+strides = [1,1]; % every pixel
+pooling = [0, 1]; % max pooling - avg pooling
 
 % construct convnet
 C = default_convnet (size_in, channel_in, full_layers, conv_layers, poolratios, strides);
 
+C.pooling = pooling;
+
 C.learning.lrate = 1e-3;
 C.learning.lrate0 = 5000;
 C.learning.momentum = 0;
+C.learning.weight_decay = 0.0005;
 
 C.adadelta.use = 1;
 C.adadelta.momentum = 0.95;
