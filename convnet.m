@@ -189,7 +189,7 @@ rerr_ma = 0;
 
 if C.lcn.use
     subwindow = fspecial('gaussian', C.lcn.neigh);
-    subwindow_sum = ones(C.lcn.neigh);
+    %subwindow_sum = ones(C.lcn.neigh);
 end
 
 for step=1:n_epochs
@@ -218,6 +218,21 @@ for step=1:n_epochs
 
         if use_gpu > 0
             v0 = gpuArray(single(v0));
+        end
+
+        if C.lcn.use 
+            cinsz = zeros(n_conv, 1);
+            szinsz = zeros(n_conv, 1);
+            cin = C.structure.channel_in;
+            szin = C.structure.size_in;
+            repost = reshape(v0, [mb_sz, szin, szin, cin]);
+
+            subsum = convn(repost, reshape(subwindow_sum, [1, C.lcn.neigh, C.lcn.neigh, 1]), 'same');
+            repost = repost - subsum / C.lcn.neigh^2;
+            repost2 = repost.^2;
+            subsum = convn(repost2, reshape(subwindow_sum, [1, C.lcn.neigh, C.lcn.neigh, 1]), 'same');
+            repost = repost ./(sqrt(subsum + 1e-12) / C.lcn.neigh);
+            v0 = reshape(repost, [mb_sz, size(patches, 2)]);
         end
 
         % add error

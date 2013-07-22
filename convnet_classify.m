@@ -43,7 +43,15 @@ repost = reshape(posterior, [mb_sz, szin, szin, cin]);
 
 if C.lcn.use
     subwindow = fspecial('gaussian', C.lcn.neigh);
-    subwindow_sum = ones(C.lcn.neigh);
+    %subwindow_sum = ones(C.lcn.neigh);
+end
+
+if C.lcn.use 
+    subsum = convn(repost, reshape(subwindow_sum, [1, C.lcn.neigh, C.lcn.neigh, 1]), 'same');
+    repost = repost - subsum / C.lcn.neigh^2;
+    repost2 = repost.^2;
+    subsum = convn(repost2, reshape(subwindow_sum, [1, C.lcn.neigh, C.lcn.neigh, 1]), 'same');
+    repost = repost ./(sqrt(subsum + 1e-12) / C.lcn.neigh);
 end
 
 for l = 1:n_conv
