@@ -18,6 +18,13 @@ X_valid_labels = X_labels(perm_idx(n_train+1:end));
 X = X(perm_idx(1:n_train), :);
 X_labels = X_labels(perm_idx(1:n_train));
 
+% pad images
+pad_k = 2;
+pad_v = 0;
+X = padimages(X, 32, 3, pad_k, pad_v);
+X_valid = padimages(X_valid, 32, 3, pad_k, pad_v);
+X_test = padimages(X_test, 32, 3, pad_k, pad_v);
+
 use_whitening = 0;
 
 if use_whitening
@@ -28,7 +35,7 @@ if use_whitening
 end
 
 % structures
-size_in = 32; % supports a squre image
+size_in = 32 + pad_k * 2; % supports a squre image
 channel_in = 3; % grayscale image
 full_layers = [2000, 2000, 10];
 conv_layers = [5*5, 32, 5*5, 32]; % 32 5x5 filters x 2
@@ -92,6 +99,17 @@ C = convnet (C, X, X_labels+1, X_valid, X_valid_labels+1, 0.1);
 fprintf(1, 'Training is done after %f seconds\n', toc);
 
 save('convnet_cifar10.mat', 'C');
+
+if C.do_normalize
+    % make it zero-mean
+    Xm = mean(X, 1);
+    X_test = bsxfun(@minus, X_test, Xm);
+end
+if C.do_normalize_std
+    % make it unit-variance
+    Xs = std(X, [], 1);
+    X_test = bsxfun(@rdivide, X_test, Xs);
+end
 
 [pred] = convnet_classify (C, X_test);
 n_correct = sum(X_test_labels+1 == pred);

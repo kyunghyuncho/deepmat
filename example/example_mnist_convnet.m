@@ -18,8 +18,15 @@ X_valid_labels = X_labels(perm_idx(n_train+1:end));
 X = X(perm_idx(1:n_train), :);
 X_labels = X_labels(perm_idx(1:n_train));
 
+% pad images
+pad_k = 2;
+pad_v = 0;
+X = padimages(X, 28, 1, pad_k, pad_v);
+X_valid = padimages(X_valid, 28, 1, pad_k, pad_v);
+X_test = padimages(X_test, 28, 1, pad_k, pad_v);
+
 % structures
-size_in = 28; % square image 28 x 28
+size_in = 28 + pad_k * 2; % supports a square image
 channel_in = 1; % grayscale image
 full_layers = [2000, 2000, 10]; % 2000-2000-10 fully connected layers
 conv_layers = [5*5, 32, 5*5, 32]; % 32 5x5 filters + 32 5x5 filters
@@ -44,7 +51,7 @@ C.adadelta.epsilon = 1e-8;
 C.do_normalize = 0;
 C.do_normalize_std = 0;
 
-C.dropout.use = 0;
+C.dropout.use = 1;
 
 C.learning.minibatch_sz = 32;
 
@@ -79,7 +86,8 @@ fprintf(1, 'Training is done after %f seconds\n', toc);
 
 save('convnet_mnist.mat', 'C');
 
+[pred] = convnet_classify (C, X_test);
+n_correct = sum(X_test_labels+1 == pred);
 
-
-
+fprintf(2, 'Correctly classified test samples: %d/%d\n', n_correct, size(X_test, 1));
 
