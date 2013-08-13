@@ -352,7 +352,7 @@ for step=1:n_epochs
                 h0_full{l} = sigmoid(h0_full{l}, C.hidden.use_tanh);
             end
             if l == n_full + 1 && C.output.binary
-                h0_full{l} = sigmoid(h0_full{l});
+                h0_full{l} = softmax(h0_full{l});
             end
         end
 

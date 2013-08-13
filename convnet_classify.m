@@ -117,7 +117,7 @@ for l = 2:n_full+1
         posterior = sigmoid(posterior, C.hidden.use_tanh);
     end
     if l == n_full + 1 && C.output.binary
-        posterior = sigmoid(posterior);
+        posterior = softmax(posterior);
     end
 end
 
