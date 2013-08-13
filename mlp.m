@@ -220,7 +220,7 @@ for step=1:n_epochs
             end
 
             if l == n_layers && M.output.binary
-                h0{l} = sigmoid(h0{l});
+                h0{l} = softmax(h0{l});
             end
         end
 

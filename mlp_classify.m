@@ -48,7 +48,7 @@ if isfield(M, 'dbm') && M.dbm.use
         end
 
         if l == n_layers && M.output.binary
-            posterior = sigmoid(posterior);
+            posterior = softmax(posterior);
         end
     end
 else
@@ -64,7 +64,7 @@ else
         end
 
         if l == n_layers && M.output.binary
-            posterior = sigmoid(posterior);
+            posterior = softmax(posterior);
         end
     end
 end
