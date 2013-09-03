@@ -160,6 +160,11 @@ for step=1:n_epochs
         D.signals.recon_errors = [D.signals.recon_errors rerr];
 
         % get gradient
+        vr = bsxfun(@plus,h0 * D.W',D.vbias');
+        if D.data.binary
+            vr = sigmoid(vr, D.visible.use_tanh);
+        end
+
         deltao = vr - v0_clean;
         if D.data.binary && D.visible.use_tanh
             deltao = deltao .* dsigmoid(vr, D.visible.use_tanh);
