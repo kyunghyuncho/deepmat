@@ -205,7 +205,10 @@ for step=1:n_epochs
                     h0{l} = h0{l-1} * M.W{l-1};
                 end
                 if l < n_layers-1
-                    q0 = gpuArray(single(Qt{l+1}(mb_start:mb_end,:)));
+                    q0 = Qt{l+1}(mb_start:mb_end,:);
+                    if use_gpu
+                        q0 = gpuArray(q0);
+                    end
                     h0{l} = h0{l} + q0 * M.dbm.W{l}';
                     clear q0;
                 end
