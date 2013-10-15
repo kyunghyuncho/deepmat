@@ -46,12 +46,12 @@ fprintf(1, 'Training is done after %f seconds\n', toc);
 
 fprintf(2, 'Training the classifier: ');
 rbm_feature = 1./(1 + exp(bsxfun(@minus, -X * R.W, R.hbias')));
-model = train(X_labels, sparse(rbm_feature), '-s 0');
+model = train(X_labels, sparse(double(rbm_feature)), '-s 0');
 fprintf(2, 'Done\n');
 
 fprintf(2, 'Testing the classifier: ');
 rbm_feature = 1./(1 + exp(bsxfun(@minus, -X_test * R.W, R.hbias')));
-[L accuracy] = predict(X_test_labels, sparse(rbm_feature), model);
+[L accuracy] = predict(X_test_labels, sparse(double(rbm_feature)), model);
 fprintf(2, 'Done\n');
 
 
