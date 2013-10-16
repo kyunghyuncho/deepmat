@@ -462,7 +462,7 @@ for step=1:n_epochs
                             now_cost = sum(-dEs - logsum(double(gather(-fEs + cEs))) + log(size(vf,1)));
                             costs(s) = gather(now_cost);
                         else
-                            now_cost = sum(-dEs - logsum(gather(-fEs + cEs)) + log(size(vf,1)));
+                            now_cost = sum(-dEs - logsum(-fEs + cEs) + log(size(vf,1)));
                             costs(s) = now_cost;
                         end
                     end
