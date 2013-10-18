@@ -35,7 +35,7 @@ R.hook.per_epoch = {@save_intermediate, {'grbm_faces.mat'}};
 R.verbose = 1;
 
 % display the progress
-R.debug.do_display = 1;
+R.debug.do_display = 0;
 R.debug.display_interval = 5;
 R.debug.display_fid = 1;
 R.debug.display_function = @visualize_grbm;
