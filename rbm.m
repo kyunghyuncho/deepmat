@@ -462,7 +462,7 @@ for step=1:n_epochs
                             now_cost = sum(-dEs - logsum(double(gather(-fEs + cEs))) + log(size(vf,1)));
                             costs(s) = gather(now_cost);
                         else
-                            now_cost = sum(-dEs - logsum(gather(-fEs + cEs)) + log(size(vf,1)));
+                            now_cost = sum(-dEs - logsum(-fEs + cEs) + log(size(vf,1)));
                             costs(s) = now_cost;
                         end
                     end
@@ -508,6 +508,11 @@ for step=1:n_epochs
 
         if R.verbose == 1
             fprintf(2, '.');
+        end
+        
+        if R.debug.do_display == 1 && mod(R.iteration.n_updates, R.debug.display_interval) == 0
+            R.debug.display_function (R.debug.display_fid, R, v0, v1, h0, h1, W_grad, vbias_grad, hbias_grad, sigma_grad);
+            drawnow;
         end
 
         if use_gpu > 0
@@ -556,11 +561,6 @@ for step=1:n_epochs
                 stopping = 1;
                 break;
             end
-        end
-        
-        if R.debug.do_display == 1 && mod(R.iteration.n_updates, R.debug.display_interval) == 0
-            R.debug.display_function (R.debug.display_fid, R, v0, v1, h0, h1, W_grad, vbias_grad, hbias_grad, sigma_grad);
-            drawnow;
         end
     end
 
