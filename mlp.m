@@ -387,7 +387,10 @@ for step=1:n_epochs
         if early_stop
             n_valid = size(valid_patches, 1);
             rndidx = randperm(n_valid);
-            v0valid = gpuArray(single(valid_patches(rndidx(1:round(n_valid * valid_portion)),:)));
+            v0valid = valid_patches(rndidx(1:round(n_valid * valid_portion)),:);
+            if use_gpu > 0
+                v0valid = gpuArray(single(v0valid));
+            end
 
             if M.output.binary
                 vr = mlp_classify(M, v0valid, [], 1);
