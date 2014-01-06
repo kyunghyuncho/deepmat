@@ -52,6 +52,7 @@ function [C] = default_convnet (size_in, channel_in, full_layers, conv_layers, p
     % 1 - tanh
     % 2 - relu
     C.hidden.use_tanh = 1;
+    C.conv.use_tanh = 1;
 
     % pooling
     % 0 - max
@@ -102,7 +103,7 @@ function [C] = default_convnet (size_in, channel_in, full_layers, conv_layers, p
         end
 
         if C.conv.use_tanh == 2
-            C.cbiases{l} = ones(conv_layers(l,2), 1);
+            C.cbiases{l} = 0.01 * ones(conv_layers(l,2), 1);
         else
             C.cbiases{l} = zeros(conv_layers(l,2), 1);
         end
