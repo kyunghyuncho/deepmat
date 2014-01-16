@@ -457,7 +457,7 @@ for step=1:n_epochs
             if adaptive_lrate == 1
                 if use_Qpre
                     h0_next = cell(n_layers, 1);
-                    h0_next{1} = v0;
+                    h0_next{1} = v0_next;
                     for l = 2:n_layers
                         if Qpre_mask(l)
                             h0_next{l} = Qpre{l}(nmb_start:nmb_end, :);
