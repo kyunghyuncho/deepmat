@@ -188,7 +188,7 @@ end
 rerr_ma = 0;
 
 if C.lcn.use
-    subwindow = fspecial('gaussian', C.lcn.neigh);
+    subwindow_sum = fspecial('gaussian', C.lcn.neigh);
     %subwindow_sum = ones(C.lcn.neigh);
 end
 
@@ -395,7 +395,7 @@ for step=1:n_epochs
 
         % backprop
         % fully connected layers, first
-        dfull = h0_full{end} - targets(cvp == mb, :);
+        dfull = h0_full{end} - xt;
         for l = n_full+1:-1:1
             biases_grad{l} = biases_grad{l} + mean(dfull, 1)';
             if l > 1
