@@ -55,7 +55,6 @@ cd_k = R.learning.cd_k;
 persistent_cd = R.learning.persistent_cd;
 momentum = R.learning.momentum;
 weight_decay = R.learning.weight_decay;
-mf_update = R.learning.mf_update;
 
 n_hidden = R.structure.n_hidden;
 n_visible = R.structure.n_visible;

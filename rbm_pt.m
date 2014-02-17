@@ -69,7 +69,6 @@ cd_k = R.learning.cd_k;
 persistent_cd = R.learning.persistent_cd;
 momentum = R.learning.momentum;
 weight_decay = R.learning.weight_decay;
-mf_update = R.learning.mf_update;
 
 swap_interval = R.parallel_tempering.swap_interval;
 n_chains = R.parallel_tempering.n_chains;
@@ -127,14 +126,9 @@ for step=1:n_epochs
         
         for k=1:n_chains
             for t=1:cd_k
-                if mf_update ~= 0
-                    h1{k} = binornd(1, h1{k}, size(h1{k},1), size(h1{k},2));
-                end
-                v1{k} = 1./(1 + exp(temperatures(k) * (-binornd(1, h1{k}, size(h1{k},1), size(h1{k},2)) * R.W' - repmat(R.vbias', size(h1{k}, 1), 1))));
+                h1{k} = binornd(1, h1{k}, size(h1{k},1), size(h1{k},2));
                 v1{k} = sigmoid(temperatures(k) * bsxfun(@plus, h1{k} * R.W', R.vbias'));
-                if mf_update ~= 0
-                    v1{k} = binornd(1, v1{k}, size(v1{k},1), size(v1{k},2));
-                end
+                v1{k} = binornd(1, v1{k}, size(v1{k},1), size(v1{k},2));
                 h1{k} = sigmoid(temperatures(k) * bsxfun(@plus, v1{k} * R.W, R.hbias'));
             end
         end

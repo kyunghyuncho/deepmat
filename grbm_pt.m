@@ -56,7 +56,6 @@ cd_k = R.learning.cd_k;
 persistent_cd = R.learning.persistent_cd;
 momentum = R.learning.momentum;
 weight_decay = R.learning.weight_decay;
-mf_update = R.learning.mf_update;
 
 swap_interval = R.parallel_tempering.swap_interval;
 n_chains = R.parallel_tempering.n_chains;
@@ -191,9 +190,7 @@ for step=1:n_epochs
                 fmb_sigma2s_t = sqrt(t * fmb_sigma2s.^2 + (1-t) * fmb_sigma_d.^2);
                 sigmas_t = sqrt(t * R.sigmas.^2 + (1-t) * sigmas_d.^2);
 
-                if mf_update == 0
-                    h1{ti} = binornd(1, h1{ti}, size(h1{ti},1), size(h1{ti},2));
-                end
+                h1{ti} = binornd(1, h1{ti}, size(h1{ti},1), size(h1{ti},2));
                 v1_mean{ti} = bsxfun(@plus, h1{ti} * W_t', vbias_t');
                 if (do_vsample)
                     v1{ti} = normrnd(v1_mean{ti}, fmb_sigma2s_t);

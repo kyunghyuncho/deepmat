@@ -23,7 +23,6 @@ function [R] = default_rbm (n_visible, n_hidden);
     % learning parameters
     R.learning.cd_k = 1;
     R.learning.persistent_cd = 0;
-    R.learning.mf_update = 0;
     R.learning.lrate = 1e-2;
     R.learning.lrate0 = 5000;
     R.learning.momentum = 0;
