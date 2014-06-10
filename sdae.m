@@ -103,22 +103,22 @@ for step=1:n_epochs
     if use_gpu
         % push
         for l = 1:n_layers
-            if l < n_layers 
+            if l < n_layers
                 S.W{l} = gpuArray(single(S.W{l}));
             end
             S.biases{l} = gpuArray(single(S.biases{l}));
         end
 
-        if S.adagrad.use 
+        if S.adagrad.use
             for l = 1:n_layers
-                if l < n_layers 
+                if l < n_layers
                     S.adagrad.W{l} = gpuArray(single(S.adagrad.W{l}));
                 end
                 S.adagrad.biases{l} = gpuArray(single(S.adagrad.biases{l}));
             end
         elseif S.adadelta.use
             for l = 1:n_layers
-                if l < n_layers 
+                if l < n_layers
                     S.adadelta.gW{l} = gpuArray(single(S.adadelta.gW{l}));
                     S.adadelta.W{l} = gpuArray(single(S.adadelta.W{l}));
                 end
@@ -143,7 +143,11 @@ for step=1:n_epochs
         v0_clean = v0;
 
         if S.data.binary == 0 && S.noise.level > 0
-            v0 = v0 + S.noise.level * gpuArray(randn(size(v0)));
+            if use_gpu
+                v0 = v0 + S.noise.level * gpuArray(randn(size(v0)));
+            else
+                v0 = v0 + S.noise.level * randn(size(v0));
+            end
         end
 
         if S.noise.drop > 0
@@ -340,7 +344,11 @@ for step=1:n_epochs
         if early_stop
             n_valid = size(valid_patches, 1);
             rndidx = randperm(n_valid);
-            v0valid = gpuArray(single(valid_patches(rndidx(1:round(n_valid * valid_portion)),:)));
+            if use_gpu > 0
+                v0valid = gpuArray(single(valid_patches(rndidx(1:round(n_valid * valid_portion)),:)));
+            else
+                v0valid = single(valid_patches(rndidx(1:round(n_valid * valid_portion)),:));
+            end
 
             hr = sdae_get_hidden(v0valid, S);
             vr = sdae_get_visible(hr, S);
@@ -447,11 +455,11 @@ for step=1:n_epochs
     if stopping == 1
         break;
     end
-    
+
     if S.verbose == 1
         fprintf(2, '\n');
     end
-        
+
     fprintf(2, 'Epoch %d/%d - recon_error: %f\n', step, n_epochs, ...
         S.signals.recon_errors(end));
 end
