@@ -51,7 +51,7 @@ fprintf(2, 'Done\n');
 
 fprintf(2, 'Testing the classifier: ');
 rbm_feature = 1./(1 + exp(bsxfun(@minus, -X_test * R.W, R.hbias')));
-[L accuracy] = predict(X_test_labels, sparse(double(rbm_feature)), model);
+[L accuracy probs] = predict(X_test_labels, sparse(double(rbm_feature)), model, '-b 1');
 fprintf(2, 'Done\n');
 
 
