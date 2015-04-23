@@ -35,7 +35,7 @@ for k=1:n
             vh(:, i) = sigmoid(vh * R.W(:, i) + R.vbias(i)) > rand(size(vh, 1), 1);
         end
         for j = 1:n_hidden
-            vh(:, n_visible + j) = sigmoid(vh * R.W(:, n_visible + j) + R.hbias(j)) > rand(size(vh, 1), 1);
+            vh(:, n_visible + j) = sigmoid(vh * R.W(:, j) + R.hbias(j)) > rand(size(vh, 1), 1);
         end
     end
     
